@@ -8,6 +8,7 @@
 #include "cli.h"
 #include "dbus_service.h"
 #include "kwin_script.h"
+#include "peek.h"
 #include "strip.h"
 #include "version.h"
 
@@ -230,6 +231,9 @@ static void start_strip(Run *run)
         app_log(app, "şerit devre dışı");
         return;
     }
+    if (app->peek == NULL) {
+        peek_create(app);
+    }
     Strip *strip = strip_create(app, &error);
 
     if (strip == NULL) {
@@ -313,6 +317,7 @@ int main(int argc, char **argv)
     g_main_loop_run(app->loop);
 
     strip_destroy(app->strip);
+    peek_destroy(app->peek);
     kwin_script_shutdown(app);
     dbus_service_unregister(app);
     g_bus_unown_name(owner);

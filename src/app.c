@@ -6,6 +6,7 @@
 
 #include "dbus_service.h"
 #include "kwin_script.h"
+#include "peek.h"
 #include "strip.h"
 #include "version.h"
 
@@ -194,6 +195,14 @@ void app_notify(App *app, const gchar *title, const gchar *body)
 void app_strip_hover(App *app, gboolean inside)
 {
     app_log(app, "şerit %s", inside ? "üzerinde" : "ayrıldı");
+    if (app->peek == NULL) {
+        return;
+    }
+    if (inside) {
+        peek_pointer_enter(app->peek);
+    } else {
+        peek_pointer_leave(app->peek);
+    }
 }
 
 void app_strip_click(App *app)
