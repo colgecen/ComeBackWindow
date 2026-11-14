@@ -112,18 +112,54 @@ void settings_clamp(Settings *s)
     }
 }
 
+static gboolean get_bool(GKeyFile *kf, const gchar *key, gboolean fallback)
+{
+    GError *error = NULL;
+    gboolean value = g_key_file_get_boolean(kf, GROUP, key, &error);
+
+    if (error != NULL) {
+        g_clear_error(&error);
+        return fallback;
+    }
+    return value;
+}
+
+static gint get_int(GKeyFile *kf, const gchar *key, gint fallback)
+{
+    GError *error = NULL;
+    gint value = g_key_file_get_integer(kf, GROUP, key, &error);
+
+    if (error != NULL) {
+        g_clear_error(&error);
+        return fallback;
+    }
+    return value;
+}
+
+static gdouble get_double(GKeyFile *kf, const gchar *key, gdouble fallback)
+{
+    GError *error = NULL;
+    gdouble value = g_key_file_get_double(kf, GROUP, key, &error);
+
+    if (error != NULL) {
+        g_clear_error(&error);
+        return fallback;
+    }
+    return value;
+}
+
 static void load_group(Settings *s, GKeyFile *kf)
 {
-    s->autostart = g_key_file_get_boolean(kf, GROUP, "autostart", NULL);
-    s->strip_enabled = g_key_file_get_boolean(kf, GROUP, "strip_enabled", NULL);
-    s->strip_width = g_key_file_get_integer(kf, GROUP, "strip_width", NULL);
-    s->fallback_height = g_key_file_get_integer(kf, GROUP, "fallback_height", NULL);
-    s->peek_enabled = g_key_file_get_boolean(kf, GROUP, "peek_enabled", NULL);
-    s->peek_delay_ms = g_key_file_get_integer(kf, GROUP, "peek_delay_ms", NULL);
-    s->peek_opacity = g_key_file_get_double(kf, GROUP, "peek_opacity", NULL);
-    s->shake_enabled = g_key_file_get_boolean(kf, GROUP, "shake_enabled", NULL);
-    s->tray_enabled = g_key_file_get_boolean(kf, GROUP, "tray_enabled", NULL);
-    s->first_run_done = g_key_file_get_boolean(kf, GROUP, "first_run_done", NULL);
+    s->autostart = get_bool(kf, "autostart", s->autostart);
+    s->strip_enabled = get_bool(kf, "strip_enabled", s->strip_enabled);
+    s->strip_width = get_int(kf, "strip_width", s->strip_width);
+    s->fallback_height = get_int(kf, "fallback_height", s->fallback_height);
+    s->peek_enabled = get_bool(kf, "peek_enabled", s->peek_enabled);
+    s->peek_delay_ms = get_int(kf, "peek_delay_ms", s->peek_delay_ms);
+    s->peek_opacity = get_double(kf, "peek_opacity", s->peek_opacity);
+    s->shake_enabled = get_bool(kf, "shake_enabled", s->shake_enabled);
+    s->tray_enabled = get_bool(kf, "tray_enabled", s->tray_enabled);
+    s->first_run_done = get_bool(kf, "first_run_done", s->first_run_done);
 
     gchar *lang = g_key_file_get_string(kf, GROUP, "language", NULL);
     if (lang != NULL) {

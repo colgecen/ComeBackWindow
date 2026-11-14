@@ -143,7 +143,7 @@ $(TESTBIN)/%: tests/unit/%.c $(TEST_SRC)
 TEST_UNIT_SRC := $(filter-out src/main.c,$(SRC))
 
 test-unit: all
-	@set -e; if [ -z "$(TESTS_C)" ]; then echo "Birim testi yok"; exit 0; fi; \
+	@set -e; mkdir -p $(TESTBIN); if [ -z "$(TESTS_C)" ]; then echo "Birim testi yok"; exit 0; fi; \
 	for t in $(TESTS_C); do \
 	  name=$$(basename $$t .c); \
 	  $(CC) $(CFLAGS_LOCAL) $(PKG_CFLAGS) -Isrc \
