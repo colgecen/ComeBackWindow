@@ -1,0 +1,30 @@
+# Build artefacts
+/build/
+*.o
+*.a
+*.so
+*.so.*
+comebackwindow
+tests/helpers/testwin
+
+# Generated protocol sources
+protocols/wlr-layer-shell-unstable-v1-protocol.c
+protocols/wlr-layer-shell-unstable-v1-client-protocol.h
+
+# Generated icons and translations
+assets/*.png
+po/*.mo
+*.tar.gz
+*.tar.xz
+
+# Packaging artefacts
+packaging/pkg/
+packaging/src/
+packaging/*.pkg.tar.*
+packaging/rpmbuild/
+
+# Editor / tooling
+*.swp
+*~
+compile_commands.json
+.cache/
