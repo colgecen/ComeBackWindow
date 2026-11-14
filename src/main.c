@@ -9,6 +9,7 @@
 #include "dbus_service.h"
 #include "kwin_script.h"
 #include "peek.h"
+#include "shortcuts.h"
 #include "strip.h"
 #include "tray.h"
 #include "version.h"
@@ -181,6 +182,35 @@ static void name_lost_cb(GDBusConnection *connection,
 
 static gboolean startup_components(Run *run);
 
+static gboolean run_restore_shortcuts(void)
+{
+    GError *error = NULL;
+    GDBusConnection *bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+
+    if (bus == NULL) {
+        g_printerr("comebackwindow: oturum veriyoluna bağlanılamadı: %s\n",
+                   error != NULL ? error->message : "bilinmeyen hata");
+        g_clear_error(&error);
+        return FALSE;
+    }
+    gboolean had_backup = FALSE;
+    gboolean ok = shortcuts_restore(bus, &had_backup, &error);
+
+    g_object_unref(bus);
+    if (!ok) {
+        g_printerr("comebackwindow: kısayollar geri yüklenemedi: %s\n",
+                   error != NULL ? error->message : "bilinmeyen hata");
+        g_clear_error(&error);
+        return FALSE;
+    }
+    if (had_backup) {
+        g_print("Kısayol yedeği geri yüklendi.\n");
+    } else {
+        g_print("Geri yüklenecek kısayol yedeği yok.\n");
+    }
+    return TRUE;
+}
+
 static void on_name_acquired(GDBusConnection *connection,
                              const gchar *name,
                              gpointer user_data)
@@ -305,11 +335,16 @@ int main(int argc, char **argv)
         g_print("comebackwindow %s\n", CBW_VERSION);
         return 0;
     }
+    if (run.opts.mode == CBW_MODE_RESTORE_SHORTCUTS) {
+        return run_restore_shortcuts() ? 0 : 1;
+    }
 
     App *app = &run.app;
     app->debug = run.opts.debug || parse_bool_env("CBW_DEBUG");
     app->native_show_desktop = TRUE;
     app->native_close = TRUE;
+    app->native_minimize = TRUE;
+    app->native_maximize = TRUE;
     app->command_channel = g_strdup("invoke");
     settings_init_defaults(&app->settings);
     g_queue_init(&app->commands);

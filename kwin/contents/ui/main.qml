@@ -35,6 +35,8 @@ Item {
         fallback_height: 44,
         native_show_desktop: true,
         native_close: true,
+        native_minimize: true,
+        native_maximize: true,
         command_channel: "invoke"
     })
     property bool peekActive: false
@@ -149,13 +151,17 @@ Item {
     function applyShortcutPassivity() {
         var nativeDesktop = root.settings.native_show_desktop === true;
         var nativeClose = root.settings.native_close === true;
+        var nativeMinimize = root.settings.native_minimize !== false;
+        var nativeMaximize = root.settings.native_maximize !== false;
 
         showDesktop.sequence = nativeDesktop ? "" : "Meta+D";
-        showDesktopAlt.sequence = nativeDesktop ? "Meta+M" : "Meta+M";
+        showDesktopAlt.sequence = "Meta+M";
         closeShortcut.sequence = nativeClose ? "" : "Alt+F4";
-        if (nativeDesktop) {
-            showDesktopAlt.sequence = "Meta+M";
-        }
+        minimizeShortcut.sequence = nativeMinimize ? "Meta+Shift+Down"
+                                                   : "Meta+Down";
+        maximizeShortcut.sequence = nativeMaximize ? "Meta+Shift+Up"
+                                                   : "Meta+Up";
+        desktopWatchTimer.running = nativeDesktop;
     }
 
     /* --- F1: masaüstünü göster / geri getir -------------------------- */
@@ -173,6 +179,15 @@ Item {
         id: desktopVerifyTimer
         interval: 350
         repeat: false
+        onTriggered: root.verifyDesktopState()
+    }
+
+    /* Yerel Show Desktop kısayolu kullanılıyorsa durumu yokla. */
+    Timer {
+        id: desktopWatchTimer
+        interval: 500
+        repeat: true
+        running: false
         onTriggered: root.verifyDesktopState()
     }
 

@@ -71,6 +71,8 @@ struct _App {
     /* Kısayol çakışma yönetimi sonucu */
     gboolean native_show_desktop;
     gboolean native_close;
+    gboolean native_minimize;
+    gboolean native_maximize;
     gchar *command_channel;   /* "invoke" veya "poll" */
     gchar *state_json;
 };

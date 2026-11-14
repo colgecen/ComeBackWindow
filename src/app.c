@@ -7,6 +7,7 @@
 #include "dbus_service.h"
 #include "kwin_script.h"
 #include "peek.h"
+#include "shortcuts.h"
 #include "strip.h"
 #include "tray.h"
 #include "version.h"
@@ -81,9 +82,13 @@ gchar *app_settings_json(App *app)
     gchar *base = settings_to_json(&app->settings);
     gsize len = strlen(base);
     gchar *extra = g_strdup_printf(
-        ",\"native_show_desktop\":%s,\"native_close\":%s,\"command_channel\":\"%s\"}",
+        ",\"native_show_desktop\":%s,\"native_close\":%s,"
+        "\"native_minimize\":%s,\"native_maximize\":%s,"
+        "\"command_channel\":\"%s\"}",
         app->native_show_desktop ? "true" : "false",
         app->native_close ? "true" : "false",
+        app->native_minimize ? "true" : "false",
+        app->native_maximize ? "true" : "false",
         app->command_channel != NULL ? app->command_channel : "invoke");
 
     if (len > 0 && base[len - 1] == '}') {
@@ -224,6 +229,7 @@ void app_handle_event(App *app, const gchar *name, const gchar *json)
     if (g_strcmp0(name, "script-loaded") == 0) {
         /* Betik yeniden yüklendi: ayarları hemen gönder. */
         app_notify_settings(app);
+        shortcuts_check(app);
         return;
     }
     if (g_strcmp0(name, "shake") == 0) {

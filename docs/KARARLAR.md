@@ -52,3 +52,16 @@ Ek doğrulamalar:
   `Activate` çağrılır ve süreç 0 ile çıkar.
 - **2026-11-14 — Kurulum veri dizini:** Geliştirmede `CBW_DATA_DIR`, kurulumda
   `$(PREFIX)/share/comebackwindow`.
+- **2026-11-14 — Kısayol çakışması:** `allShortcutInfos` tablosu
+  `/component/kwin` üzerinden okunur. Yerel eylem aynı Qt tuş kodunu
+  kullanıyorsa çakışma vardır. Yerel eylem yalnızca bizim eylemimiz de aynı
+  tuşa bağlıysa serbest bırakılmaya çalışılır; yazma `setForeignShortcutKeys`
+  ile yapılır ve **okuma ile doğrulanır**. Bu oturumda yazma yok sayıldığı
+  için yerel kısayol korunur: Masaüstünü Göster ve Pencereyi Kapat yerel
+  KWin eylemine bırakılır (`native_show_desktop`, `native_close`), küçültme
+  ve büyütme ise çakışmayan `Meta+Shift+Down` / `Meta+Shift+Up` tuşlarına
+  kaydırılır (`native_minimize`, `native_maximize`).
+- **2026-11-14 — Kısayol yedeği:** Yerel bir kısayol gerçekten serbest
+  bırakılabilirse özgün tuşlar `~/.config/comebackwindow/shortcuts-backup.ini`
+  dosyasına yazılır. `--restore-shortcuts` bu dosyayı okur, yazar ve sonucu
+  doğrular; doğrulanamazsa dosya korunur ve hata döner.
