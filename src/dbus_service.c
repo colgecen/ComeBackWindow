@@ -7,6 +7,7 @@
  */
 #include "dbus_service.h"
 
+#include "layout.h"
 #include "version.h"
 
 static const gchar introspection_xml[] =
@@ -92,8 +93,8 @@ static void handle_report_layout(App *app, GVariant *parameters)
     g_variant_get(parameters, "(&s)", &json);
     g_free(app->last_layout_json);
     app->last_layout_json = g_strdup(json);
-    if (app->debug) {
-        app_log(app, "düzen raporu alındı");
+    if (layout_apply(app, json)) {
+        app_log(app, "düzen raporu alındı: %zu ekran", app->layout_len);
     }
 }
 
