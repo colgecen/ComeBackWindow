@@ -210,3 +210,32 @@ void app_strip_click(App *app)
     app_log(app, "şeride tıklandı: masaüstü aç/kapat");
     app_send_command(app, "toggle-desktop");
 }
+
+void app_handle_event(App *app, const gchar *name, const gchar *json)
+{
+    if (name == NULL) {
+        return;
+    }
+    if (g_str_has_prefix(name, "peek-")) {
+        peek_on_event(app->peek, name, json);
+        return;
+    }
+    if (g_strcmp0(name, "script-loaded") == 0) {
+        /* Betik yeniden yüklendi: ayarları hemen gönder. */
+        app_notify_settings(app);
+        return;
+    }
+    if (g_strcmp0(name, "shake") == 0) {
+        app_log(app, "Aero Shake algılandı: %s", json != NULL ? json : "{}");
+        return;
+    }
+    if (g_strcmp0(name, "desktop-shown") == 0) {
+        app->desktop_shown = TRUE;
+        strip_set_peek_active(app->strip, FALSE);
+        return;
+    }
+    if (g_strcmp0(name, "desktop-restored") == 0) {
+        app->desktop_shown = FALSE;
+        return;
+    }
+}

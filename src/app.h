@@ -63,6 +63,7 @@ struct _App {
     gboolean shortcuts_warned;
     gboolean kwin_failed_notified;
     gboolean kwin_ready;
+    gboolean desktop_shown;
 
     /* Kısayol çakışma yönetimi sonucu */
     gboolean native_show_desktop;
@@ -111,5 +112,8 @@ void app_notify(App *app, const gchar *title, const gchar *body);
 /* Şerit olayları. */
 void app_strip_hover(App *app, gboolean inside);
 void app_strip_click(App *app);
+
+/* Betikten gelen olayları ilgili bileşenlere dağıtır. */
+void app_handle_event(App *app, const gchar *name, const gchar *json);
 
 G_END_DECLS

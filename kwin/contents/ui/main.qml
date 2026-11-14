@@ -162,14 +162,29 @@ Item {
 
     function toggleDesktop() {
         Logic.toggleShowDesktop(root.ws);
+        root.desktopShown = !root.desktopShown;
+        root.reportEvent(root.desktopShown ? "desktop-shown" : "desktop-restored",
+                         {});
+        desktopVerifyTimer.restart();
+    }
+
+    /* KWin durumu gecikmeli yayınlar; kısa süre sonra doğrula. */
+    Timer {
+        id: desktopVerifyTimer
+        interval: 350
+        repeat: false
+        onTriggered: root.verifyDesktopState()
+    }
+
+    function verifyDesktopState() {
         root.kwinPropertyGet("showingDesktop", function(value) {
-            root.desktopShown = value === true;
             if (value === null) {
-                root.reportEvent("desktop-toggled", {});
-            } else if (value === true) {
-                root.reportEvent("desktop-shown", {});
-            } else {
-                root.reportEvent("desktop-restored", {});
+                return;
+            }
+            if (value !== root.desktopShown) {
+                root.desktopShown = value === true;
+                root.reportEvent(value === true ? "desktop-shown"
+                                                : "desktop-restored", {});
             }
         });
     }

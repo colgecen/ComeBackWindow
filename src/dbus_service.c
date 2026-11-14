@@ -113,6 +113,7 @@ static void handle_report_event(App *app, GVariant *parameters)
     if (app->debug) {
         app_log(app, "olay: %s %s", name, json);
     }
+    app_handle_event(app, name, json);
     emit_event_signal(app, name, json);
 }
 
