@@ -108,4 +108,8 @@ void app_clear_layout(App *app);
 /* Bildirim gösterir (freedesktop). */
 void app_notify(App *app, const gchar *title, const gchar *body);
 
+/* Şerit olayları. */
+void app_strip_hover(App *app, gboolean inside);
+void app_strip_click(App *app);
+
 G_END_DECLS

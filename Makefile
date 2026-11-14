@@ -30,7 +30,7 @@ CC ?= gcc
 PKG_CONFIG ?= pkg-config
 WAYLAND_SCANNER ?= wayland-scanner
 
-PKG_MODULES := glib-2.0 gio-2.0 gio-unix-2.0 gtk4 wayland-client x11
+PKG_MODULES := glib-2.0 gio-2.0 gio-unix-2.0 gtk4 cairo wayland-client x11
 PKG_PACKAGES := glib2-devel gtk4-devel wayland-devel libX11-devel   # Fedora adları
 
 BUILD := build
@@ -39,7 +39,7 @@ TESTBIN := $(BUILD)/tests
 
 WARN := -std=c11 -Wall -Wextra -Wpedantic -Wshadow -Wformat=2 -Werror
 OPT ?= -O2
-CFLAGS_LOCAL := $(WARN) $(OPT) -g -D_GNU_SOURCE -fPIC -DCBW_DATADIR=\"$(PREFIX)/share\"
+CFLAGS_LOCAL := $(WARN) $(OPT) -g -D_GNU_SOURCE -fPIC -Iprotocols -DCBW_DATADIR=\"$(PREFIX)/share\"
 SANITIZE := -fsanitize=address,undefined -fno-omit-frame-pointer
 LDLIBS_LOCAL := -lm
 
@@ -49,6 +49,11 @@ PKG_LIBS := $(shell $(PKG_CONFIG) --libs $(PKG_MODULES) 2>/dev/null)
 LAYER_XML := protocols/wlr-layer-shell-unstable-v1.xml
 LAYER_HDR := protocols/wlr-layer-shell-unstable-v1-client-protocol.h
 LAYER_SRC := protocols/wlr-layer-shell-unstable-v1-protocol.c
+
+# layer-shell, xdg_popup sembolüne başvurduğu için xdg-shell de üretilir.
+XDG_XML := protocols/xdg-shell.xml
+XDG_HDR := protocols/xdg-shell-client-protocol.h
+XDG_SRC := protocols/xdg-shell-protocol.c
 
 SRC := $(wildcard src/*.c)
 OBJ := $(patsubst src/%.c,$(OBJDIR)/%.o,$(SRC))
@@ -79,11 +84,24 @@ $(LAYER_HDR): $(LAYER_XML)
 $(LAYER_SRC): $(LAYER_XML)
 	$(WAYLAND_SCANNER) private-code $< $@
 
-protos: $(LAYER_HDR) $(LAYER_SRC)
+$(XDG_HDR): $(XDG_XML)
+	$(WAYLAND_SCANNER) client-header $< $@
+
+$(XDG_SRC): $(XDG_XML)
+	$(WAYLAND_SCANNER) private-code $< $@
+
+protos: $(LAYER_HDR) $(LAYER_SRC) $(XDG_HDR) $(XDG_SRC)
+
+PROTO_OBJ := $(OBJDIR)/wlr-layer-shell-unstable-v1-protocol.o \
+             $(OBJDIR)/xdg-shell-protocol.o
+
+$(PROTO_OBJ): $(OBJDIR)/%.o: protocols/%.c $(LAYER_HDR) $(XDG_HDR)
+	@mkdir -p $(OBJDIR)
+	$(CC) $(CFLAGS_LOCAL) $(PKG_CFLAGS) -c $< -o $@
 
 $(OBJDIR)/strip_wayland.o: $(LAYER_HDR)
-$(BIN): $(OBJ)
-	$(CC) $(CFLAGS_LOCAL) $(OBJ) -o $@ $(PKG_LIBS) $(LDLIBS_LOCAL)
+$(BIN): $(OBJ) $(PROTO_OBJ)
+	$(CC) $(CFLAGS_LOCAL) $(OBJ) $(PROTO_OBJ) -o $@ $(PKG_LIBS) $(LDLIBS_LOCAL)
 
 deps-check:
 	@missing=""; \
@@ -145,7 +163,7 @@ $(TESTBIN)/%: tests/unit/%.c $(TEST_SRC)
 	$(CC) $(CFLAGS_LOCAL) $(PKG_CFLAGS) $< $(TEST_UNIT_SRC) -o $@ $(PKG_LIBS) $(LDLIBS_LOCAL)
 
 # Birim testlerinde ortak kod: kaynak modüller doğrudan bağlanır.
-TEST_UNIT_SRC := $(filter-out src/main.c,$(SRC))
+TEST_UNIT_SRC := $(filter-out src/main.c,$(SRC)) $(LAYER_SRC) $(XDG_SRC)
 
 test-unit: all
 	@set -e; mkdir -p $(TESTBIN); if [ -z "$(TESTS_C)" ]; then echo "Birim testi yok"; exit 0; fi; \
@@ -223,4 +241,4 @@ dist:
 
 clean:
 	rm -rf $(BUILD) $(BIN) tests/helpers/testwin
-	rm -f $(LAYER_HDR) $(LAYER_SRC) po/*.mo
+	rm -f $(LAYER_HDR) $(LAYER_SRC) $(XDG_HDR) $(XDG_SRC) po/*.mo

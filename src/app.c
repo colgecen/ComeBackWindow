@@ -6,6 +6,7 @@
 
 #include "dbus_service.h"
 #include "kwin_script.h"
+#include "strip.h"
 #include "version.h"
 
 #include <stdarg.h>
@@ -97,6 +98,7 @@ void app_notify_settings(App *app)
 {
     dbus_service_emit_settings_changed(app);
     app_send_command(app, "settings-changed");
+    strip_refresh(app->strip);
 }
 
 static void queue_command(App *app, const gchar *command)
@@ -187,4 +189,15 @@ void app_notify(App *app, const gchar *title, const gchar *body)
                                          g_variant_builder_end(&actions),
                                          g_variant_builder_end(&hints), 5000),
                            NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL, NULL);
+}
+
+void app_strip_hover(App *app, gboolean inside)
+{
+    app_log(app, "şerit %s", inside ? "üzerinde" : "ayrıldı");
+}
+
+void app_strip_click(App *app)
+{
+    app_log(app, "şeride tıklandı: masaüstü aç/kapat");
+    app_send_command(app, "toggle-desktop");
 }

@@ -8,6 +8,7 @@
 #include "cli.h"
 #include "dbus_service.h"
 #include "kwin_script.h"
+#include "strip.h"
 #include "version.h"
 
 #include <glib-unix.h>
@@ -204,6 +205,43 @@ static gboolean parse_bool_env(const gchar *name)
         || g_ascii_strcasecmp(value, "yes") == 0;
 }
 
+static void strip_hover_cb(Strip *strip, gboolean inside, gpointer user_data)
+{
+    (void)strip;
+    app_strip_hover(user_data, inside);
+}
+
+static void strip_click_cb(Strip *strip, gpointer user_data)
+{
+    (void)strip;
+    app_strip_click(user_data);
+}
+
+static void start_strip(Run *run)
+{
+    App *app = &run->app;
+    GError *error = NULL;
+    StripCallbacks callbacks = {
+        .hover = strip_hover_cb,
+        .click = strip_click_cb
+    };
+
+    if (app->no_strip || !app->settings.strip_enabled) {
+        app_log(app, "şerit devre dışı");
+        return;
+    }
+    Strip *strip = strip_create(app, &error);
+
+    if (strip == NULL) {
+        app_warn(app, "şerit açılamadı: %s",
+                 error != NULL ? error->message : "bilinmeyen hata");
+        g_clear_error(&error);
+        return;
+    }
+    strip_set_callbacks(strip, &callbacks, app);
+    strip_update(strip);
+}
+
 static gboolean startup_components(Run *run)
 {
     if (run->opts.no_tray) {
@@ -217,6 +255,7 @@ static gboolean startup_components(Run *run)
         /* Betik henüz yüklenemedi; köprü kendi yeniden denemesini kurdu. */
         app_warn(&run->app, "KWin betiği şimdilik yüklenemedi");
     }
+    start_strip(run);
     return TRUE;
 }
 
@@ -273,6 +312,7 @@ int main(int argc, char **argv)
 
     g_main_loop_run(app->loop);
 
+    strip_destroy(app->strip);
     kwin_script_shutdown(app);
     dbus_service_unregister(app);
     g_bus_unown_name(owner);

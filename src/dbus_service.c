@@ -8,6 +8,7 @@
 #include "dbus_service.h"
 
 #include "layout.h"
+#include "strip.h"
 #include "version.h"
 
 static const gchar introspection_xml[] =
@@ -95,6 +96,7 @@ static void handle_report_layout(App *app, GVariant *parameters)
     app->last_layout_json = g_strdup(json);
     if (layout_apply(app, json)) {
         app_log(app, "düzen raporu alındı: %zu ekran", app->layout_len);
+        strip_update(app->strip);
     }
 }
 
