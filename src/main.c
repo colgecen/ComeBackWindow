@@ -10,6 +10,7 @@
 #include "kwin_script.h"
 #include "peek.h"
 #include "strip.h"
+#include "tray.h"
 #include "version.h"
 
 #include <glib-unix.h>
@@ -246,6 +247,22 @@ static void start_strip(Run *run)
     strip_update(strip);
 }
 
+static void start_tray(Run *run)
+{
+    App *app = &run->app;
+    GError *error = NULL;
+
+    if (app->no_tray || !app->settings.tray_enabled) {
+        app_log(app, "tepsi devre dışı");
+        return;
+    }
+    if (tray_create(app, &error) == NULL) {
+        app_warn(app, "tepsi açılamadı: %s",
+                 error != NULL ? error->message : "bilinmeyen hata");
+        g_clear_error(&error);
+    }
+}
+
 static gboolean startup_components(Run *run)
 {
     if (run->opts.no_tray) {
@@ -260,6 +277,7 @@ static gboolean startup_components(Run *run)
         app_warn(&run->app, "KWin betiği şimdilik yüklenemedi");
     }
     start_strip(run);
+    start_tray(run);
     return TRUE;
 }
 
@@ -316,6 +334,7 @@ int main(int argc, char **argv)
 
     g_main_loop_run(app->loop);
 
+    tray_destroy(app->tray);
     strip_destroy(app->strip);
     peek_destroy(app->peek);
     kwin_script_shutdown(app);

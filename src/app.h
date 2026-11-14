@@ -59,6 +59,9 @@ struct _App {
     Tray *tray;
     gpointer settings_dialog;
     gpointer setup_dialog;
+    gpointer tray_menu;       /* TrayMenu* */
+    gboolean open_settings;
+    gboolean open_setup;
 
     gboolean shortcuts_warned;
     gboolean kwin_failed_notified;

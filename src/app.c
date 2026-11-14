@@ -8,6 +8,7 @@
 #include "kwin_script.h"
 #include "peek.h"
 #include "strip.h"
+#include "tray.h"
 #include "version.h"
 
 #include <stdarg.h>
@@ -232,10 +233,12 @@ void app_handle_event(App *app, const gchar *name, const gchar *json)
     if (g_strcmp0(name, "desktop-shown") == 0) {
         app->desktop_shown = TRUE;
         strip_set_peek_active(app->strip, FALSE);
+        tray_update_status(app->tray);
         return;
     }
     if (g_strcmp0(name, "desktop-restored") == 0) {
         app->desktop_shown = FALSE;
+        tray_update_status(app->tray);
         return;
     }
 }
