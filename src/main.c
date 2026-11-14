@@ -7,6 +7,7 @@
 #include "app.h"
 #include "cli.h"
 #include "dbus_service.h"
+#include "kwin_script.h"
 #include "version.h"
 
 #include <glib-unix.h>
@@ -211,7 +212,11 @@ static gboolean startup_components(Run *run)
     if (run->opts.no_strip) {
         run->app.no_strip = TRUE;
     }
-    app_log(&run->app, "bileşenler başlatılıyor (iskelet)");
+    app_log(&run->app, "bileşenler başlatılıyor");
+    if (!kwin_script_init(&run->app)) {
+        /* Betik henüz yüklenemedi; köprü kendi yeniden denemesini kurdu. */
+        app_warn(&run->app, "KWin betiği şimdilik yüklenemedi");
+    }
     return TRUE;
 }
 
@@ -268,6 +273,7 @@ int main(int argc, char **argv)
 
     g_main_loop_run(app->loop);
 
+    kwin_script_shutdown(app);
     dbus_service_unregister(app);
     g_bus_unown_name(owner);
     g_main_loop_unref(app->loop);

@@ -5,6 +5,7 @@
 #include "app.h"
 
 #include "dbus_service.h"
+#include "kwin_script.h"
 #include "version.h"
 
 #include <stdarg.h>
@@ -95,6 +96,14 @@ gchar *app_settings_json(App *app)
 void app_notify_settings(App *app)
 {
     dbus_service_emit_settings_changed(app);
+    app_send_command(app, "settings-changed");
+}
+
+static void queue_command(App *app, const gchar *command)
+{
+    g_mutex_lock(&app->commands_lock);
+    g_queue_push_tail(&app->commands, g_strdup(command));
+    g_mutex_unlock(&app->commands_lock);
 }
 
 void app_send_command(App *app, const gchar *command)
@@ -102,9 +111,27 @@ void app_send_command(App *app, const gchar *command)
     if (command == NULL || *command == '\0') {
         return;
     }
-    g_mutex_lock(&app->commands_lock);
-    g_queue_push_tail(&app->commands, g_strdup(command));
-    g_mutex_unlock(&app->commands_lock);
+    if (g_strcmp0(app->command_channel, "invoke") == 0
+        && kwin_script_send_command(app, command)) {
+        return;
+    }
+    queue_command(app, command);
+}
+
+void app_on_kwin_ready(App *app)
+{
+    gsize count = 0;
+    gchar **pending = app_take_commands(app, &count);
+
+    app->kwin_ready = TRUE;
+    app_log(app, "KWin köprüsü hazır (%zu bekleyen komut)", count);
+    for (gsize i = 0; i < count; i++) {
+        if (g_strcmp0(app->command_channel, "invoke") != 0
+            || !kwin_script_send_command(app, pending[i])) {
+            queue_command(app, pending[i]);
+        }
+    }
+    g_strfreev(pending);
 }
 
 gchar **app_take_commands(App *app, gsize *count)

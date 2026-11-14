@@ -62,6 +62,7 @@ struct _App {
 
     gboolean shortcuts_warned;
     gboolean kwin_failed_notified;
+    gboolean kwin_ready;
 
     /* Kısayol çakışma yönetimi sonucu */
     gboolean native_show_desktop;
@@ -94,6 +95,9 @@ gchar *app_settings_json(App *app);
 
 /* Betiğe komut gönderir (kanal A, yoksa kuyruğa ekler). */
 void app_send_command(App *app, const gchar *command);
+
+/* KWin betiği hazır olduğunda çağrılır: kuyruğu boşaltır, durumu işaretler. */
+void app_on_kwin_ready(App *app);
 
 /* Kuyruktan komut çeker; dizi g_free ile serbest bırakılır. */
 gchar **app_take_commands(App *app, gsize *count);
