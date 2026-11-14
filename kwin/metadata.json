@@ -1,0 +1,18 @@
+{
+  "KPlugin": {
+    "Id": "comebackwindow",
+    "Name": "Come Back Window",
+    "Description": "Windows-style window shortcuts, Aero Peek and Show Desktop strip",
+    "Version": "1.0.0",
+    "License": "MIT",
+    "EnabledByDefault": false,
+    "Authors": [
+      {
+        "Name": "Come Back Window contributors"
+      }
+    ]
+  },
+  "X-Plasma-API": "declarative",
+  "X-Plasma-MainScript": "ui/main.qml",
+  "KPackageStructure": "KWin/Script"
+}
