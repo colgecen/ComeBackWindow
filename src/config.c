@@ -247,11 +247,16 @@ gchar *settings_to_json(const Settings *s)
 {
     g_return_val_if_fail(s != NULL, NULL);
 
+    /* JSON her zaman nokta ondalık ayırıcısı ister; yerel ayardan bağımsız yaz. */
+    gchar opacity[G_ASCII_DTOSTR_BUF_SIZE];
+
+    g_ascii_formatd(opacity, sizeof(opacity), "%.3f", s->peek_opacity);
+
     gchar *lang = g_strescape(s->language != NULL ? s->language : "auto", NULL);
     gchar *json = g_strdup_printf(
         "{\"autostart\":%s,\"strip_enabled\":%s,\"strip_width\":%d,"
         "\"fallback_height\":%d,\"peek_enabled\":%s,\"peek_delay_ms\":%d,"
-        "\"peek_opacity\":%.3f,\"shake_enabled\":%s,\"tray_enabled\":%s,"
+        "\"peek_opacity\":%s,\"shake_enabled\":%s,\"tray_enabled\":%s,"
         "\"language\":\"%s\",\"first_run_done\":%s}",
         s->autostart ? "true" : "false",
         s->strip_enabled ? "true" : "false",
@@ -259,7 +264,7 @@ gchar *settings_to_json(const Settings *s)
         s->fallback_height,
         s->peek_enabled ? "true" : "false",
         s->peek_delay_ms,
-        s->peek_opacity,
+        opacity,
         s->shake_enabled ? "true" : "false",
         s->tray_enabled ? "true" : "false",
         lang,

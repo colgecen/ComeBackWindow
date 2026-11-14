@@ -3,6 +3,7 @@
 #include "test_util.h"
 
 #include <glib/gstdio.h>
+#include <locale.h>
 
 static gchar *tmpdir = NULL;
 
@@ -189,6 +190,33 @@ static void test_json(void)
     settings_clear(&s);
 }
 
+/* JSON çıktısı yerel ayardan bağımsız olarak nokta kullanmalı. */
+static void test_json_locale(void)
+{
+    gchar *saved = g_strdup(setlocale(LC_NUMERIC, NULL));
+    Settings s;
+    gchar *json = NULL;
+
+    if (setlocale(LC_NUMERIC, "de_DE.utf8") == NULL
+        && setlocale(LC_NUMERIC, "de_AT.utf8") == NULL
+        && setlocale(LC_NUMERIC, "tr_TR.utf8") == NULL) {
+        g_free(saved);
+        return; /* uygun yerel ayar yok: atla */
+    }
+    settings_init_defaults(&s);
+    s.peek_opacity = 0.08;
+    json = settings_to_json(&s);
+    CHECK(json != NULL);
+    CHECK(strstr(json, "\"peek_opacity\":0.080") != NULL);
+    CHECK(strchr(json, ',') != NULL); /* ayırıcı virgüller JSON yapısından */
+    g_free(json);
+    settings_clear(&s);
+    if (saved != NULL) {
+        setlocale(LC_NUMERIC, saved);
+    }
+    g_free(saved);
+}
+
 int main(void)
 {
     setup();
@@ -200,6 +228,7 @@ int main(void)
     test_corrupt_file();
     test_partial_file();
     test_json();
+    test_json_locale();
 
     teardown();
     TEST_MAIN_END();
