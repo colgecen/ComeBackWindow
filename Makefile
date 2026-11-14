@@ -156,7 +156,7 @@ test-asan: clean
 	@$(MAKE) test-unit OPT="$(SANITIZE) -O1" 
 
 test-js:
-	@if command -v node >/dev/null; then node --test tests/js/; \
+	@if command -v node >/dev/null; then node --test tests/js/*.test.js; \
 	else echo "SKIP test-js (node yok)"; fi
 
 test-validate:
