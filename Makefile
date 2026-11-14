@@ -39,7 +39,7 @@ TESTBIN := $(BUILD)/tests
 
 WARN := -std=c11 -Wall -Wextra -Wpedantic -Wshadow -Wformat=2 -Werror
 OPT ?= -O2
-CFLAGS_LOCAL := $(WARN) $(OPT) -g -D_GNU_SOURCE -fPIC
+CFLAGS_LOCAL := $(WARN) $(OPT) -g -D_GNU_SOURCE -fPIC -DCBW_DATADIR=\"$(PREFIX)/share\"
 SANITIZE := -fsanitize=address,undefined -fno-omit-frame-pointer
 LDLIBS_LOCAL := -lm
 
@@ -127,13 +127,18 @@ lint: all
 	else echo "SKIP clang-tidy (kurulu değil veya derleme veritabanı yok)"; fi; \
 	if command -v shellcheck >/dev/null; then shellcheck tools/*.sh tests/integration/*.sh; \
 	else echo "SKIP shellcheck (kurulu değil)"; fi; \
-	if command -v desktop-file-validate >/dev/null; then desktop-file-validate data/*.desktop; \
-	else echo "SKIP desktop-file-validate"; fi; \
-	if command -v appstreamcli >/dev/null; then appstreamcli validate --no-net data/*.metainfo.xml; \
-	else echo "SKIP appstreamcli"; fi; \
-	if command -v xmllint >/dev/null; then xmllint --noout protocols/*.xml; \
-	else echo "SKIP xmllint"; fi; \
-	for p in po/*.po; do if command -v msgfmt >/dev/null; then msgfmt --check -o /dev/null $$p; fi; done
+	if command -v desktop-file-validate >/dev/null && ls data/*.desktop >/dev/null 2>&1; then \
+	  desktop-file-validate data/*.desktop; \
+	else echo "SKIP desktop-file-validate (araç yok veya dosya yok)"; fi; \
+	if command -v appstreamcli >/dev/null && ls data/*.metainfo.xml >/dev/null 2>&1; then \
+	  appstreamcli validate --no-net data/*.metainfo.xml; \
+	else echo "SKIP appstreamcli (araç yok veya dosya yok)"; fi; \
+	if command -v xmllint >/dev/null && ls protocols/*.xml >/dev/null 2>&1; then \
+	  xmllint --noout protocols/*.xml; \
+	else echo "SKIP xmllint (araç yok veya dosya yok)"; fi; \
+	if command -v msgfmt >/dev/null && ls po/*.po >/dev/null 2>&1; then \
+	  for p in po/*.po; do msgfmt --check -o /dev/null $$p; done; \
+	else echo "SKIP msgfmt (araç yok veya dosya yok)"; fi
 
 $(TESTBIN)/%: tests/unit/%.c $(TEST_SRC)
 	@mkdir -p $(TESTBIN)
@@ -160,10 +165,14 @@ test-js:
 	else echo "SKIP test-js (node yok)"; fi
 
 test-validate:
-	@if command -v desktop-file-validate >/dev/null; then desktop-file-validate data/*.desktop; fi
-	@if command -v appstreamcli >/dev/null; then appstreamcli validate --no-net data/*.metainfo.xml; fi
-	@if command -v xmllint >/dev/null; then xmllint --noout protocols/*.xml; fi
-	@if command -v msgfmt >/dev/null; then for p in po/*.po; do msgfmt --check -o /dev/null $$p; done; fi
+	@if command -v desktop-file-validate >/dev/null && ls data/*.desktop >/dev/null 2>&1; then \
+	  desktop-file-validate data/*.desktop; fi
+	@if command -v appstreamcli >/dev/null && ls data/*.metainfo.xml >/dev/null 2>&1; then \
+	  appstreamcli validate --no-net data/*.metainfo.xml; fi
+	@if command -v xmllint >/dev/null && ls protocols/*.xml >/dev/null 2>&1; then \
+	  xmllint --noout protocols/*.xml; fi
+	@if command -v msgfmt >/dev/null && ls po/*.po >/dev/null 2>&1; then \
+	  for p in po/*.po; do msgfmt --check -o /dev/null $$p; done; fi
 	@echo "Doğrulama tamam."
 
 test-integration: all tests/helpers/testwin
