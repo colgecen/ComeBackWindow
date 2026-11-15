@@ -1,0 +1,21 @@
+# Maintainer: Come Back Window contributors
+pkgname=comebackwindow
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Windows-style window shortcuts, Aero Peek and Show Desktop strip for KDE Plasma 6"
+arch=('x86_64' 'aarch64')
+license=('MIT')
+depends=('gtk4' 'glib2' 'wayland' 'libx11' 'kwin')
+makedepends=('gcc' 'make' 'pkgconf' 'librsvg' 'gettext' 'desktop-file-utils' 'appstream')
+source=()
+sha256sums=()
+
+build() {
+    cd "$srcdir/$pkgname-$pkgver"
+    make PREFIX=/usr
+}
+
+package() {
+    cd "$srcdir/$pkgname-$pkgver"
+    make DESTDIR="$pkgdir" PREFIX=/usr install
+}

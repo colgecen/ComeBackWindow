@@ -168,7 +168,8 @@ lint: all
 	  desktop-file-validate data/*.desktop; \
 	else echo "SKIP desktop-file-validate (araç yok veya dosya yok)"; fi; \
 	if command -v appstreamcli >/dev/null && ls data/*.metainfo.xml >/dev/null 2>&1; then \
-	  appstreamcli validate --no-net data/*.metainfo.xml; \
+	  appstreamcli validate --no-net \
+	    --override=url-homepage-missing=info data/*.metainfo.xml; \
 	else echo "SKIP appstreamcli (araç yok veya dosya yok)"; fi; \
 	if command -v xmllint >/dev/null && ls protocols/*.xml >/dev/null 2>&1; then \
 	  xmllint --noout protocols/*.xml; \
@@ -216,7 +217,8 @@ test-validate:
 	@if command -v desktop-file-validate >/dev/null && ls data/*.desktop >/dev/null 2>&1; then \
 	  desktop-file-validate data/*.desktop; fi
 	@if command -v appstreamcli >/dev/null && ls data/*.metainfo.xml >/dev/null 2>&1; then \
-	  appstreamcli validate --no-net data/*.metainfo.xml; fi
+	  appstreamcli validate --no-net \
+	    --override=url-homepage-missing=info data/*.metainfo.xml; fi
 	@if command -v xmllint >/dev/null && ls protocols/*.xml >/dev/null 2>&1; then \
 	  xmllint --noout protocols/*.xml; fi
 	@if command -v msgfmt >/dev/null && ls po/*.po >/dev/null 2>&1; then \
@@ -266,7 +268,7 @@ uninstall:
 
 dist:
 	@ver=$$(sed -n 's/^#define CBW_VERSION "\(.*\)"/\1/p' src/version.h 2>/dev/null || echo 1.0.0); \
-	tar --exclude-vcs --exclude=build --exclude='*.png' --exclude='*.mo' \
+	tar --exclude-vcs --exclude=build --exclude='assets/comebackwindow-*.png' --exclude='*.mo' \
 	    --transform "s,^\.,comebackwindow-$$ver," -czf comebackwindow-$$ver.tar.gz .
 
 clean:

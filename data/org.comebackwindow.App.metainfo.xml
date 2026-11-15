@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.comebackwindow.App</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+
+  <name>Come Back Window</name>
+  <summary>Windows-style window shortcuts for KDE Plasma 6</summary>
+
+  <description>
+    <p>
+      Come Back Window brings the window behaviour Windows users are used to
+      to KDE Plasma 6 on Wayland: show desktop, minimize, maximize, close,
+      minimize all others and restore them.
+    </p>
+    <ul>
+      <li>Show desktop / restore with Meta+D and Meta+M</li>
+      <li>Thin Show Desktop strip at the bottom-right corner of the screen</li>
+      <li>Aero Peek: windows fade while the pointer rests on the strip</li>
+      <li>Aero Shake: shake a window to minimize the others</li>
+      <li>Tray menu with settings and a first-run wizard</li>
+      <li>Turkish and English interface</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">org.comebackwindow.App.desktop</launchable>
+
+  <developer id="org.comebackwindow">
+    <name>Come Back Window contributors</name>
+  </developer>
+
+  <provides>
+    <binary>comebackwindow</binary>
+  </provides>
+
+  <categories>
+    <category>Utility</category>
+  </categories>
+
+  <keywords>
+    <keyword>desktop</keyword>
+    <keyword>window</keyword>
+    <keyword>shortcut</keyword>
+    <keyword>peek</keyword>
+    <keyword>shake</keyword>
+  </keywords>
+
+  <releases>
+    <release version="1.0.0" date="2026-11-15">
+      <description>
+        <p>First release.</p>
+      </description>
+    </release>
+  </releases>
+
+  <content_rating type="oars-1.1"/>
+</component>

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Come Back Window
+GenericName=Window Shortcuts
+Comment=Windows-style window shortcuts, Aero Peek and Show Desktop strip
+Exec=comebackwindow --settings
+Icon=comebackwindow
+Terminal=false
+Categories=Utility;
+Keywords=desktop;window;shortcut;peek;shake;masaüstü;pencere;
+StartupNotify=false
