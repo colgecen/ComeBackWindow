@@ -49,6 +49,10 @@ void settings_init_defaults(Settings *s)
     s->strip_width = 10;
     s->strip_style = g_strdup("bar");
     s->strip_text = g_strdup("Masaüstü");
+    s->strip_color = g_strdup("#1f80c4");
+    s->strip_text_color = g_strdup("#ffffff");
+    s->strip_opacity = 0.90;
+    s->strip_text_opacity = 1.0;
     s->fallback_height = 44;
     s->peek_enabled = TRUE;
     s->peek_delay_ms = 500;
@@ -67,6 +71,8 @@ void settings_clear(Settings *s)
     g_clear_pointer(&s->language, g_free);
     g_clear_pointer(&s->strip_style, g_free);
     g_clear_pointer(&s->strip_text, g_free);
+    g_clear_pointer(&s->strip_color, g_free);
+    g_clear_pointer(&s->strip_text_color, g_free);
 }
 
 gchar *config_dir(void)
@@ -122,6 +128,25 @@ gboolean settings_backup_corrupt(GError **error)
     return ok;
 }
 
+/* #RRGGBB biçimini doğrular; geçersizse varsayılana düşer. */
+static gboolean color_ok(const gchar *text)
+{
+    if (text == NULL || strlen(text) != 7 || text[0] != '#') {
+        return FALSE;
+    }
+    for (gint i = 1; i < 7; i++) {
+        if (!g_ascii_isxdigit(text[i])) {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+static gchar *color_valid(const gchar *text, const gchar *fallback)
+{
+    return g_strdup(color_ok(text) ? text : fallback);
+}
+
 /* Metni kırpar, boş/geçersizse varsayılana düşer ve uzunluğu sınırlar. */
 static gchar *strip_text_valid(const gchar *text)
 {
@@ -170,6 +195,16 @@ void settings_clamp(Settings *s)
 
     g_free(s->strip_text);
     s->strip_text = text;
+    gchar *color = color_valid(s->strip_color, "#1f80c4");
+
+    g_free(s->strip_color);
+    s->strip_color = color;
+    gchar *text_color = color_valid(s->strip_text_color, "#ffffff");
+
+    g_free(s->strip_text_color);
+    s->strip_text_color = text_color;
+    s->strip_opacity = CLAMP(s->strip_opacity, 0.0, 1.0);
+    s->strip_text_opacity = CLAMP(s->strip_text_opacity, 0.0, 1.0);
 }
 
 static gboolean get_bool(GKeyFile *kf, const gchar *key, gboolean fallback)
@@ -236,6 +271,20 @@ static void load_group(Settings *s, GKeyFile *kf)
         g_free(s->strip_text);
         s->strip_text = text;
     }
+    gchar *color = g_key_file_get_string(kf, GROUP, "strip_color", NULL);
+    if (color != NULL) {
+        g_free(s->strip_color);
+        s->strip_color = color;
+    }
+    gchar *text_color = g_key_file_get_string(kf, GROUP, "strip_text_color",
+                                              NULL);
+    if (text_color != NULL) {
+        g_free(s->strip_text_color);
+        s->strip_text_color = text_color;
+    }
+    s->strip_opacity = get_double(kf, "strip_opacity", s->strip_opacity);
+    s->strip_text_opacity = get_double(kf, "strip_text_opacity",
+                                       s->strip_text_opacity);
 }
 
 gboolean settings_load(Settings *s, GError **error)
@@ -277,6 +326,22 @@ static void write_group(const Settings *s, GKeyFile *kf)
     g_key_file_set_string(kf, GROUP, "strip_text",
                           s->strip_text != NULL ? s->strip_text
                                                 : "Masaüstü");
+    g_key_file_set_string(kf, GROUP, "strip_color",
+                          s->strip_color != NULL ? s->strip_color
+                                                 : "#1f80c4");
+    g_key_file_set_string(kf, GROUP, "strip_text_color",
+                          s->strip_text_color != NULL
+                              ? s->strip_text_color : "#ffffff");
+    gchar strip_alpha[G_ASCII_DTOSTR_BUF_SIZE];
+
+    g_ascii_formatd(strip_alpha, sizeof(strip_alpha), "%.3f",
+                    s->strip_opacity);
+    g_key_file_set_string(kf, GROUP, "strip_opacity", strip_alpha);
+    gchar text_alpha[G_ASCII_DTOSTR_BUF_SIZE];
+
+    g_ascii_formatd(text_alpha, sizeof(text_alpha), "%.3f",
+                    s->strip_text_opacity);
+    g_key_file_set_string(kf, GROUP, "strip_text_opacity", text_alpha);
     g_key_file_set_integer(kf, GROUP, "fallback_height", s->fallback_height);
     g_key_file_set_boolean(kf, GROUP, "peek_enabled", s->peek_enabled);
     g_key_file_set_integer(kf, GROUP, "peek_delay_ms", s->peek_delay_ms);
@@ -368,9 +433,22 @@ gchar *settings_to_json(const Settings *s)
     gchar *style = json_escape(s->strip_style != NULL ? s->strip_style : "bar");
     gchar *text = json_escape(s->strip_text != NULL ? s->strip_text
                                                     : "Masaüstü");
+    gchar *color = json_escape(s->strip_color != NULL ? s->strip_color
+                                                      : "#1f80c4");
+    gchar *text_color = json_escape(s->strip_text_color != NULL
+                                        ? s->strip_text_color : "#ffffff");
+    gchar strip_alpha[G_ASCII_DTOSTR_BUF_SIZE];
+    gchar text_alpha[G_ASCII_DTOSTR_BUF_SIZE];
+
+    g_ascii_formatd(strip_alpha, sizeof(strip_alpha), "%.3f",
+                    s->strip_opacity);
+    g_ascii_formatd(text_alpha, sizeof(text_alpha), "%.3f",
+                    s->strip_text_opacity);
     gchar *json = g_strdup_printf(
         "{\"autostart\":%s,\"strip_enabled\":%s,\"strip_width\":%d,"
         "\"strip_style\":\"%s\",\"strip_text\":\"%s\","
+        "\"strip_color\":\"%s\",\"strip_text_color\":\"%s\","
+        "\"strip_opacity\":%s,\"strip_text_opacity\":%s,"
         "\"fallback_height\":%d,\"peek_enabled\":%s,\"peek_delay_ms\":%d,"
         "\"peek_opacity\":%s,\"shake_enabled\":%s,\"tray_enabled\":%s,"
         "\"language\":\"%s\",\"first_run_done\":%s}",
@@ -379,6 +457,10 @@ gchar *settings_to_json(const Settings *s)
         s->strip_width,
         style,
         text,
+        color,
+        text_color,
+        strip_alpha,
+        text_alpha,
         s->fallback_height,
         s->peek_enabled ? "true" : "false",
         s->peek_delay_ms,
@@ -391,5 +473,7 @@ gchar *settings_to_json(const Settings *s)
     g_free(lang);
     g_free(style);
     g_free(text);
+    g_free(color);
+    g_free(text_color);
     return json;
 }

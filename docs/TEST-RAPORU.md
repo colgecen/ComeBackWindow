@@ -59,6 +59,9 @@
 | 2.6 | Yazı modu (dikey metin, aynı boyut) | PASS | 10×68 yüzey, "Masaüstü" dikey çizildi |
 | 2.7 | Hover'da yalnız yazı | PASS | Zemin saydam, metin görünür |
 | 2.8 | Yazıya tıkla | PASS | `showingDesktop` iki yönde değişti |
+| 2.9 | Şerit rengi/opaklığı | PASS | Kırmızı + %50 opaklık canlı denendi |
+| 2.10 | Yazı rengi/opaklığı | PASS | Sarı yazı canlı denendi |
+| 2.11 | Uzun metin tam sığar | PASS | "Masaüstünü Göster" kırpılmadan sığdı |
 | 3.1 | Meta+D | PASS | KDE yerel kısayolu çalışıyor |
 | 3.5 | Meta+Home (diğerlerini küçült) | PASS | Küçültülen yığını doldu |
 | 3.6 | Meta+Shift+M (geri getir) | PASS | Yığın boşaldı |

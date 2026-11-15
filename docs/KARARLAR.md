@@ -97,3 +97,9 @@ Ek doğrulamalar:
   Hover'da zemin tamamen saydam olur, yalnız yazı kalır; tıklama aynı
   masaüstü aç/kapat işlevini görür. Varsayılan `bar` olduğu için metin
   girilmezse eski çubuk korunur.
+- **2026-11-16 — Renk ve saydamlık:** Şerit gövdesi ve yazı için ayrı
+  `strip_color` / `strip_text_color` (#RRGGBB) ve `strip_opacity` /
+  `strip_text_opacity` (0..1) ayarları eklendi. Geçersiz renkler
+  varsayılana düşer; opaklıklar sıkıştırılır. Yazı modunda metin, şerit
+  yüksekliğine sığmazsa yatay olarak sıkıştırılır ("…" kullanılmaz), böylece
+  metin her zaman tam görünür.

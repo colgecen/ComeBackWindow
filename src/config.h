@@ -19,6 +19,10 @@ typedef struct {
     gint strip_width;
     gchar *strip_style;   /* "bar" veya "text" */
     gchar *strip_text;    /* yazı modunda gösterilen metin */
+    gchar *strip_color;   /* gövde rengi, #RRGGBB */
+    gchar *strip_text_color;
+    gdouble strip_opacity;      /* 0..1 */
+    gdouble strip_text_opacity; /* 0..1 */
     gint fallback_height;
     gboolean peek_enabled;
     gint peek_delay_ms;

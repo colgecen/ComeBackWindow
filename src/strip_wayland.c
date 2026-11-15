@@ -46,6 +46,10 @@ typedef struct {
     gboolean redraw;
     gboolean text_mode;
     gchar *text;
+    gchar *bar_color;
+    gchar *text_color;
+    gdouble opacity;
+    gdouble text_opacity;
 } StripSurface;
 
 typedef struct {
@@ -56,6 +60,10 @@ typedef struct {
     gboolean fullscreen;
     gboolean text_mode;
     gchar *text;
+    gchar *bar_color;
+    gchar *text_color;
+    gdouble opacity;
+    gdouble text_opacity;
 } StripSpec;
 
 typedef struct {
@@ -565,8 +573,12 @@ static gboolean surface_draw(StripWayland *bw, StripSurface *ts)
 
     cairo_scale(cr, (gdouble)width / ts->geo.width,
                 (gdouble)height / ts->geo.height);
+    StripStyle style;
+
+    strip_style_init(&style, ts->text_mode, ts->text, ts->bar_color,
+                     ts->text_color, ts->opacity, ts->text_opacity);
     strip_draw(cr, ts->geo.width, ts->geo.height, ts->geo.edge, ts->hover,
-               bw->strip->peek_active, ts->text_mode, ts->text);
+               bw->strip->peek_active, &style);
     cairo_destroy(cr);
     cairo_surface_flush(cs);
     cairo_surface_destroy(cs);
@@ -622,6 +634,8 @@ static void surfaces_clear(StripWayland *bw)
         StripSurface *ts = g_ptr_array_index(bw->surfaces, i);
 
         g_free(ts->text);
+        g_free(ts->bar_color);
+        g_free(ts->text_color);
         buffers_free(ts);
         if (ts->layer != NULL) {
             zwlr_layer_surface_v1_destroy(ts->layer);
@@ -654,6 +668,10 @@ static StripSurface *surface_create(StripWayland *bw, const StripSpec *spec,
     }
     ts->text_mode = spec->text_mode;
     ts->text = g_strdup(spec->text);
+    ts->bar_color = g_strdup(spec->bar_color);
+    ts->text_color = g_strdup(spec->text_color);
+    ts->opacity = spec->opacity;
+    ts->text_opacity = spec->text_opacity;
     ts->output = find_output(bw, spec->output);
     ts->surface = wl_compositor_create_surface(bw->compositor);
     if (ts->surface == NULL) {
@@ -697,6 +715,8 @@ static void specs_clear(StripWayland *bw)
 
         g_free(spec->output);
         g_free(spec->text);
+        g_free(spec->bar_color);
+        g_free(spec->text_color);
     }
     g_array_set_size(bw->specs, 0);
 }
@@ -720,7 +740,11 @@ void strip_wayland_update(Strip *strip)
             .scale = entry->scale > 0 ? entry->scale : 1.0,
             .fullscreen = entry->fullscreen,
             .text_mode = g_strcmp0(app->settings.strip_style, "text") == 0,
-            .text = g_strdup(app->settings.strip_text)
+            .text = g_strdup(app->settings.strip_text),
+            .bar_color = g_strdup(app->settings.strip_color),
+            .text_color = g_strdup(app->settings.strip_text_color),
+            .opacity = app->settings.strip_opacity,
+            .text_opacity = app->settings.strip_text_opacity
         };
 
         g_array_append_val(bw->specs, spec);
@@ -800,6 +824,12 @@ static void apply_specs(StripWayland *bw)
             reuse->text_mode = spec->text_mode;
             g_free(reuse->text);
             reuse->text = g_strdup(spec->text);
+            g_free(reuse->bar_color);
+            reuse->bar_color = g_strdup(spec->bar_color);
+            g_free(reuse->text_color);
+            reuse->text_color = g_strdup(spec->text_color);
+            reuse->opacity = spec->opacity;
+            reuse->text_opacity = spec->text_opacity;
             app_log(bw->strip->app, "şerit yüzeyi yeniden kullanıldı");
         }
         if (reuse != NULL) {

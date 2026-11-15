@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: comebackwindow 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 23:54+0300\n"
+"POT-Creation-Date: 2026-11-16 00:13+0300\n"
 "PO-Revision-Date: 2026-11-15 21:30+0300\n"
 "Last-Translator: Come Back Window contributors\n"
 "Language-Team: Turkish\n"
@@ -33,118 +33,134 @@ msgstr ""
 msgid "English"
 msgstr ""
 
-#: src/dialogs.c:141
+#: src/dialogs.c:145
 msgid "Arayüz dili"
 msgstr ""
 
-#: src/dialogs.c:154
+#: src/dialogs.c:158
 msgid "Şerit görünümü"
 msgstr ""
 
-#: src/dialogs.c:166
+#: src/dialogs.c:170
 msgid "Şerit yazısı"
 msgstr ""
 
-#: src/dialogs.c:205
+#: src/dialogs.c:235
 msgid "Oturum açılışında başlat"
 msgstr ""
 
-#: src/dialogs.c:207
+#: src/dialogs.c:237
 msgid "Köşe şeridini göster"
 msgstr ""
 
-#: src/dialogs.c:209
+#: src/dialogs.c:239
 msgid "Şerit genişliği (px)"
 msgstr ""
 
-#: src/dialogs.c:213
+#: src/dialogs.c:243
+msgid "Şerit rengi"
+msgstr ""
+
+#: src/dialogs.c:244
+msgid "Şerit opaklığı"
+msgstr ""
+
+#: src/dialogs.c:246
+msgid "Yazı rengi"
+msgstr ""
+
+#: src/dialogs.c:248
+msgid "Yazı opaklığı"
+msgstr ""
+
+#: src/dialogs.c:250
 msgid "Panel yoksa yedek yükseklik"
 msgstr ""
 
-#: src/dialogs.c:222
+#: src/dialogs.c:259
 msgid "Peek gecikmesi (ms)"
 msgstr ""
 
-#: src/dialogs.c:224
+#: src/dialogs.c:261
 msgid "Peek opaklığı"
 msgstr ""
 
-#: src/dialogs.c:227
+#: src/dialogs.c:264
 msgid "Tepsi simgesi"
 msgstr ""
 
-#: src/dialogs.c:304
+#: src/dialogs.c:355
 #, c-format
 msgid "Ayarlar kaydedilemedi: %s"
 msgstr ""
 
-#: src/dialogs.c:306
+#: src/dialogs.c:357
 msgid "bilinmeyen hata"
 msgstr ""
 
-#: src/dialogs.c:350
+#: src/dialogs.c:401
 msgid "Kısayollar açılamadı"
 msgstr ""
 
-#: src/dialogs.c:358
+#: src/dialogs.c:409
 msgid "Kısayollar…"
 msgstr ""
 
-#: src/dialogs.c:359
+#: src/dialogs.c:410
 msgid "İptal"
 msgstr ""
 
-#: src/dialogs.c:360
+#: src/dialogs.c:411
 msgid "Kaydet"
 msgstr ""
 
-#: src/dialogs.c:383
+#: src/dialogs.c:434
 msgid "Come Back Window — Ayarlar"
 msgstr ""
 
-#: src/dialogs.c:385
+#: src/dialogs.c:436
 msgid "<b>Ayarlar</b>"
 msgstr ""
 
-#: src/dialogs.c:386
+#: src/dialogs.c:437
 msgid "Değişiklikler Kaydet'e basınca uygulanır."
 msgstr ""
 
-#: src/dialogs.c:494
+#: src/dialogs.c:545
 msgid "<b>Hoş geldiniz</b>"
 msgstr ""
 
-#: src/dialogs.c:495
+#: src/dialogs.c:546
 msgid ""
 "Come Back Window, Windows tarzı pencere kısayollarını KDE Plasma 6'ya taşır. "
 "Birkaç adımda ayarlayalım."
 msgstr ""
 
-#: src/dialogs.c:505
+#: src/dialogs.c:556
 msgid "<b>Başlangıç ve şerit</b>"
 msgstr ""
 
-#: src/dialogs.c:514
+#: src/dialogs.c:565
 msgid "<b>Efektler</b>"
 msgstr ""
 
-#: src/dialogs.c:515
+#: src/dialogs.c:566
 msgid "Bu ayarları daha sonra tepsi menüsünden değiştirebilirsiniz."
 msgstr ""
 
-#: src/dialogs.c:524
+#: src/dialogs.c:575
 msgid "Geri"
 msgstr ""
 
-#: src/dialogs.c:525
+#: src/dialogs.c:576
 msgid "İleri"
 msgstr ""
 
-#: src/dialogs.c:526
+#: src/dialogs.c:577
 msgid "Başla"
 msgstr ""
 
-#: src/dialogs.c:555
+#: src/dialogs.c:606
 msgid "Come Back Window — İlk Açılış"
 msgstr ""
 

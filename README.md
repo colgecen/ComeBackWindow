@@ -12,8 +12,9 @@ Plasma 6'ya taşır:
 - Aktif pencereyi küçült, büyüt, eski boyuta getir, kapat
 - Aktif hariç hepsini küçült (Meta+Home) ve geri getir (Meta+Shift+M)
 - Görev çubuğunun en sağındaki ince "Masaüstünü Göster" şeridi
-- İsteğe bağlı yazı modu: köşedeki şeride kendi metninizi yazın (dikey),
-  üzerine gelince yalnız yazı görünür
+- İsteğe bağlı yazı modu: köşedeki şeride kendi metninizi yazın (dikey,
+  tam sığar), üzerine gelince yalnız yazı görünür
+- Şerit ve yazı için renk ve saydamlık ayarları
 - Aero Peek: şeridin üstünde beklerseniz pencereler şeffaflaşır
 - Aero Shake: pencereyi sallayınca diğerleri küçülür (varsayılan kapalı)
 - Geri oku logosu, Türkçe/İngilizce arayüz, ilk açılış penceresi

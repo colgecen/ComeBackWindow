@@ -82,8 +82,31 @@ void strip_set_callbacks(Strip *strip, const StripCallbacks *callbacks,
                          gpointer user_data);
 
 /* Şerit çizimi: arka plan + ok. Hem Wayland hem X11 kullanır. */
+/* Çizim biçimi: mod, metin, renkler ve saydamlıklar. */
+typedef struct {
+    gboolean text_mode;
+    const gchar *text;
+    gdouble bar_r;
+    gdouble bar_g;
+    gdouble bar_b;
+    gdouble text_r;
+    gdouble text_g;
+    gdouble text_b;
+    gdouble opacity;
+    gdouble text_opacity;
+} StripStyle;
+
+/* "#RRGGBB" çözümler; geçersizse FALSE. */
+gboolean strip_color_parse(const gchar *hex, gdouble *r, gdouble *g,
+                           gdouble *b);
+
+/* Stili ayarlardan doldurur; geçersiz renklerde varsayılana düşer. */
+void strip_style_init(StripStyle *style, gboolean text_mode, const gchar *text,
+                      const gchar *bar_hex, const gchar *text_hex,
+                      gdouble opacity, gdouble text_opacity);
+
 void strip_draw(cairo_t *cr, gint width, gint height, StripEdge edge,
-                gboolean hover, gboolean peek_active, gboolean text_mode,
-                const gchar *text);
+                gboolean hover, gboolean peek_active,
+                const StripStyle *style);
 
 G_END_DECLS

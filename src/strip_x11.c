@@ -66,10 +66,14 @@ static void x11_surface_draw(StripX11 *sx, X11Surface *xs)
     cairo_t *cr = cairo_create(cs);
 
     const Settings *settings = &sx->strip->app->settings;
-    gboolean text_mode = g_strcmp0(settings->strip_style, "text") == 0;
+    StripStyle style;
 
+    strip_style_init(&style, g_strcmp0(settings->strip_style, "text") == 0,
+                     settings->strip_text, settings->strip_color,
+                     settings->strip_text_color, settings->strip_opacity,
+                     settings->strip_text_opacity);
     strip_draw(cr, xs->geo.width, xs->geo.height, xs->geo.edge, xs->hover,
-               sx->strip->peek_active, text_mode, settings->strip_text);
+               sx->strip->peek_active, &style);
     cairo_destroy(cr);
     cairo_surface_flush(cs);
     cairo_surface_destroy(cs);

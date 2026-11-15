@@ -53,6 +53,12 @@ static void test_defaults(void)
     CHECK(s.peek_opacity > 0.079 && s.peek_opacity < 0.081);
     CHECK_INT_EQ(s.shake_enabled, FALSE);
     CHECK_INT_EQ(s.tray_enabled, TRUE);
+    CHECK_STR_EQ(s.strip_style, "bar");
+    CHECK_STR_EQ(s.strip_text, "Masaüstü");
+    CHECK_STR_EQ(s.strip_color, "#1f80c4");
+    CHECK_STR_EQ(s.strip_text_color, "#ffffff");
+    CHECK(s.strip_opacity > 0.89 && s.strip_opacity < 0.91);
+    CHECK(s.strip_text_opacity > 0.99 && s.strip_text_opacity < 1.01);
     CHECK_STR_EQ(s.language, "auto");
     CHECK_INT_EQ(s.first_run_done, FALSE);
     settings_clear(&s);
@@ -120,6 +126,12 @@ static void test_roundtrip(void)
     out.strip_style = g_strdup("text");
     g_free(out.strip_text);
     out.strip_text = g_strdup("Masaüstü");
+    g_free(out.strip_color);
+    out.strip_color = g_strdup("#ff8800");
+    g_free(out.strip_text_color);
+    out.strip_text_color = g_strdup("#101010");
+    out.strip_opacity = 0.4;
+    out.strip_text_opacity = 0.6;
     g_free(out.language);
     out.language = g_strdup("tr");
     out.first_run_done = TRUE;
@@ -141,6 +153,10 @@ static void test_roundtrip(void)
     CHECK_INT_EQ(in.tray_enabled, FALSE);
     CHECK_STR_EQ(in.strip_style, "text");
     CHECK_STR_EQ(in.strip_text, "Masaüstü");
+    CHECK_STR_EQ(in.strip_color, "#ff8800");
+    CHECK_STR_EQ(in.strip_text_color, "#101010");
+    CHECK(in.strip_opacity > 0.39 && in.strip_opacity < 0.41);
+    CHECK(in.strip_text_opacity > 0.59 && in.strip_text_opacity < 0.61);
     CHECK_STR_EQ(in.language, "tr");
     CHECK_INT_EQ(in.first_run_done, TRUE);
 
@@ -229,6 +245,10 @@ static void test_json(void)
     CHECK(strstr(json, "\"strip_width\":8") != NULL);
     CHECK(strstr(json, "\"strip_style\":\"bar\"") != NULL);
     CHECK(strstr(json, "\"strip_text\":\"Masaüstü\"") != NULL);
+    CHECK(strstr(json, "\"strip_color\":\"#1f80c4\"") != NULL);
+    CHECK(strstr(json, "\"strip_text_color\":\"#ffffff\"") != NULL);
+    CHECK(strstr(json, "\"strip_opacity\":0.900") != NULL);
+    CHECK(strstr(json, "\"strip_text_opacity\":1.000") != NULL);
     CHECK(strstr(json, "\"language\":\"en\"") != NULL);
     CHECK(strstr(json, "\"shake_enabled\":false") != NULL);
     g_free(json);

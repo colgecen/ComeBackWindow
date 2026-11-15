@@ -102,6 +102,29 @@ static void test_geometry_from_entry(void)
     CHECK_INT_EQ(geo.height, 44);
 }
 
+static void test_color_parse(void)
+{
+    gdouble r = -1, g = -1, b = -1;
+
+    CHECK(strip_color_parse("#1f80c4", &r, &g, &b));
+    CHECK(r > 0.11 && r < 0.13);
+    CHECK(g > 0.49 && g < 0.51);
+    CHECK(b > 0.76 && b < 0.78);
+    CHECK(!strip_color_parse("mavi", &r, &g, &b));
+    CHECK(!strip_color_parse("#12345", &r, &g, &b));
+    CHECK(!strip_color_parse("#gggggg", &r, &g, &b));
+
+    StripStyle style;
+
+    strip_style_init(&style, TRUE, "Masaüstü", "bozuk", "#123456", 2.0, -1.0);
+    CHECK(style.text_mode == TRUE);
+    CHECK_STR_EQ(style.text, "Masaüstü");
+    CHECK(style.bar_r > 0.12 && style.bar_r < 0.14);   /* varsayılan mavi */
+    CHECK(style.text_r > 0.06 && style.text_r < 0.08);
+    CHECK(style.opacity > 0.99);
+    CHECK(style.text_opacity < 0.01);
+}
+
 int main(void)
 {
     test_edge_parse();
@@ -111,6 +134,7 @@ int main(void)
     test_geometry_scale();
     test_geometry_none_ve_sifir();
     test_geometry_from_entry();
+    test_color_parse();
 
     TEST_MAIN_END();
 }

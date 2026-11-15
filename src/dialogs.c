@@ -27,6 +27,10 @@ typedef struct {
     GtkWidget *strip_width;
     GtkWidget *strip_style;
     GtkWidget *strip_text;
+    GtkWidget *strip_color;
+    GtkWidget *strip_opacity;
+    GtkWidget *strip_text_color;
+    GtkWidget *strip_text_opacity;
     GtkWidget *fallback_height;
     GtkWidget *peek;
     GtkWidget *peek_delay;
@@ -167,6 +171,32 @@ static GtkWidget *add_strip_text(GtkWidget *box, const gchar *text)
     return widget;
 }
 
+static GtkWidget *add_color(GtkWidget *box, const gchar *text,
+                            const gchar *hex)
+{
+    GtkColorDialog *dialog = gtk_color_dialog_new();
+    GtkWidget *button = gtk_color_dialog_button_new(dialog);
+    GdkRGBA rgba;
+
+    if (!gdk_rgba_parse(&rgba, hex != NULL ? hex : "#1f80c4")) {
+        gdk_rgba_parse(&rgba, "#1f80c4");
+    }
+    gtk_color_dialog_button_set_rgba(GTK_COLOR_DIALOG_BUTTON(button), &rgba);
+    gtk_box_append(GTK_BOX(box), form_row(text, button));
+    return button;
+}
+
+static gchar *color_to_hex(GtkWidget *button)
+{
+    const GdkRGBA *rgba = gtk_color_dialog_button_get_rgba(
+        GTK_COLOR_DIALOG_BUTTON(button));
+    gint r = (gint)(CLAMP(rgba->red, 0.0, 1.0) * 255.0 + 0.5);
+    gint g = (gint)(CLAMP(rgba->green, 0.0, 1.0) * 255.0 + 0.5);
+    gint b = (gint)(CLAMP(rgba->blue, 0.0, 1.0) * 255.0 + 0.5);
+
+    return g_strdup_printf("#%02x%02x%02x", r, g, b);
+}
+
 static GtkWidget *add_heading(GtkWidget *box, const gchar *text,
                               const gchar *subtitle)
 {
@@ -210,6 +240,13 @@ static GtkWidget *add_general_fields(GtkWidget *box, Form *form,
                                  s->strip_width, 2, 24, 1);
     form->strip_style = add_strip_style(box, s->strip_style);
     form->strip_text = add_strip_text(box, s->strip_text);
+    form->strip_color = add_color(box, _("Şerit rengi"), s->strip_color);
+    form->strip_opacity = add_scale(box, _("Şerit opaklığı"),
+                                    s->strip_opacity, 0.0, 1.0, 0.05);
+    form->strip_text_color = add_color(box, _("Yazı rengi"),
+                                       s->strip_text_color);
+    form->strip_text_opacity = add_scale(box, _("Yazı opaklığı"),
+                                         s->strip_text_opacity, 0.0, 1.0, 0.05);
     form->fallback_height = add_spin(box, _("Panel yoksa yedek yükseklik"),
                                      s->fallback_height, 20, 120, 2);
     return box;
@@ -251,6 +288,20 @@ static Settings form_read(const Form *form, const Settings *base)
                             ? gtk_editable_get_text(GTK_EDITABLE(
                                   form->strip_text))
                             : "Masaüstü");
+    if (form->strip_color != NULL) {
+        s.strip_color = color_to_hex(form->strip_color);
+    }
+    if (form->strip_text_color != NULL) {
+        s.strip_text_color = color_to_hex(form->strip_text_color);
+    }
+    if (form->strip_opacity != NULL) {
+        s.strip_opacity = gtk_range_get_value(
+            GTK_RANGE(form->strip_opacity));
+    }
+    if (form->strip_text_opacity != NULL) {
+        s.strip_text_opacity = gtk_range_get_value(
+            GTK_RANGE(form->strip_text_opacity));
+    }
     if (form->autostart != NULL) {
         s.autostart = gtk_switch_get_active(GTK_SWITCH(form->autostart));
     }

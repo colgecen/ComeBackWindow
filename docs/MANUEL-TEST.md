@@ -33,6 +33,9 @@ dosyasına yazın.
 | 2.6 | Ayarlar > Şerit görünümü: Yazı, metin gir | Köşede aynı boyutta dikey yazı görünür |
 | 2.7 | Yazının üzerine gel | Zemin tamamen saydam, yalnız yazı kalır |
 | 2.8 | Yazıya tıkla | Masaüstü aç/kapat (çubukla aynı) |
+| 2.9 | Şerit rengi ve opaklığını değiştir | Renk/saydamlık hemen uygulanır |
+| 2.10 | Yazı rengi ve opaklığını değiştir | Yazı rengi/saydamlığı uygulanır |
+| 2.11 | Uzun metin gir | Metin kırpılmadan şeride sığar |
 
 ## 3. Kısayollar
 

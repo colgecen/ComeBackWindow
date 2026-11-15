@@ -25,7 +25,10 @@
   yedekler ve `--restore-shortcuts` ile geri yükler.
 - **Otomatik başlatma**: oturum açılışında çalıştır dosyası yönetimi.
 - **Yazı modu**: şerit çubuğu yerine köşeye yapışık dikey yazı; metin
-  ayarlardan girilir, hover'da zemin saydamlaşıp yalnız yazı kalır.
+  ayarlardan girilir, şeride tam sığar, hover'da zemin saydamlaşıp yalnız
+  yazı kalır.
+- **Renk ve saydamlık**: şerit gövdesi ve yazı için ayrı renk ve opaklık
+  ayarları.
 - **Türkçe / İngilizce arayüz**: gettext katalogları (`po/tr.po`,
   `po/en.po`) ve KWin betiği için `logic.js` sözlüğü.
 - **Marka**: geri oku logosu, 16-256 px simgeler, tanıtım kapak görseli.
