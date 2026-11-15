@@ -1,5 +1,7 @@
 # Come Back Window
 
+![Come Back Window](assets/cover.png)
+
 Windows tarzı pencere kısayolları, Aero Peek, Aero Shake ve "Masaüstünü Göster"
 şeridi — KDE Plasma 6 (Wayland) için.
 
@@ -12,7 +14,7 @@ Plasma 6'ya taşır:
 - Görev çubuğunun en sağındaki ince "Masaüstünü Göster" şeridi
 - Aero Peek: şeridin üstünde beklerseniz pencereler şeffaflaşır
 - Aero Shake: pencereyi sallayınca diğerleri küçülür (varsayılan kapalı)
-- Turuncu "geri" logosu, Türkçe/İngilizce arayüz, ilk açılış penceresi
+- Geri oku logosu, Türkçe/İngilizce arayüz, ilk açılış penceresi
 
 ## Kısayollar
 

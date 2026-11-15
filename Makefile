@@ -66,7 +66,7 @@ ICON_PNGS := $(foreach s,$(ICON_SIZES),assets/comebackwindow-$(s).png)
 TESTS_C := $(wildcard tests/unit/test_*.c)
 TESTS_BIN := $(patsubst tests/unit/%.c,$(TESTBIN)/%,$(TESTS_C))
 
-.PHONY: all deps-check icons pot mo lint test-unit test-js test-validate \
+.PHONY: all deps-check icons cover pot mo lint test-unit test-js test-validate \
         test-asan test-integration check install uninstall dist clean \
         protos help
 
@@ -123,6 +123,21 @@ deps-check:
 
 icons: $(ICON_PNGS)
 	@echo "İkonlar üretildi: $(ICON_PNGS)"
+
+# Tanıtım kapak görseli (README/arşiv); ImageMagick 7 gerekir.
+cover: assets/cover.png
+
+assets/cover.png: assets/comebackwindow-256.png
+	@command -v magick >/dev/null || { echo "magick gerekli (ImageMagick 7)"; exit 1; }
+	magick -size 1200x630 xc:'#1c86c4' \
+	  \( $< -resize 280x280 \) -gravity NorthWest -geometry +90+175 -composite \
+	  -font Noto-Sans-Bold -pointsize 74 -fill white \
+	  -gravity NorthWest -annotate +430+205 'Come Back Window' \
+	  -font Noto-Sans-Regular -pointsize 34 -fill '#eaf6fd' \
+	  -gravity NorthWest -annotate +432+300 'Windows tarzı pencere kısayolları' \
+	  -font Noto-Sans-Regular -pointsize 27 -fill '#c7e7f7' \
+	  -gravity NorthWest -annotate +432+355 'KDE Plasma 6 · Wayland' \
+	  $@
 
 assets/comebackwindow-%.png: assets/comebackwindow.svg
 ifeq ($(shell command -v rsvg-convert 2>/dev/null),)

@@ -13,6 +13,7 @@ protocols/wlr-layer-shell-unstable-v1-client-protocol.h
 
 # Generated icons and translations
 assets/*.png
+!assets/cover.png
 po/*.mo
 *.tar.gz
 *.tar.xz
