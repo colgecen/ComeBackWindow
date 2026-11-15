@@ -11,10 +11,14 @@
 
 G_BEGIN_DECLS
 
+#define CBW_STRIP_TEXT_MAX 48
+
 typedef struct {
     gboolean autostart;
     gboolean strip_enabled;
     gint strip_width;
+    gchar *strip_style;   /* "bar" veya "text" */
+    gchar *strip_text;    /* yazı modunda gösterilen metin */
     gint fallback_height;
     gboolean peek_enabled;
     gint peek_delay_ms;

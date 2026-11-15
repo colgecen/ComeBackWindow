@@ -65,8 +65,11 @@ static void x11_surface_draw(StripX11 *sx, X11Surface *xs)
     }
     cairo_t *cr = cairo_create(cs);
 
+    const Settings *settings = &sx->strip->app->settings;
+    gboolean text_mode = g_strcmp0(settings->strip_style, "text") == 0;
+
     strip_draw(cr, xs->geo.width, xs->geo.height, xs->geo.edge, xs->hover,
-               sx->strip->peek_active);
+               sx->strip->peek_active, text_mode, settings->strip_text);
     cairo_destroy(cr);
     cairo_surface_flush(cs);
     cairo_surface_destroy(cs);
@@ -96,6 +99,8 @@ static void x11_surface_place(X11Surface *xs, const LayoutEntry *entry)
         xs->y = entry->y + entry->h - xs->geo.height;
         break;
     }
+    xs->x += xs->geo.margin_left - xs->geo.margin_right;
+    xs->y += xs->geo.margin_top - xs->geo.margin_bottom;
 }
 
 static Atom intern_atom(Display *display, const gchar *name)
@@ -103,12 +108,19 @@ static Atom intern_atom(Display *display, const gchar *name)
     return XInternAtom(display, name, False);
 }
 
+static gboolean x11_geometry(StripX11 *sx, const LayoutEntry *entry,
+                             gint strip_width, StripGeometry *geo)
+{
+    (void)sx;
+    return strip_geometry_for(entry, strip_width, geo);
+}
+
 static X11Surface *x11_surface_create(StripX11 *sx, const LayoutEntry *entry,
                                       gint strip_width)
 {
     X11Surface *xs = g_new0(X11Surface, 1);
 
-    if (!strip_geometry_for(entry, strip_width, &xs->geo)) {
+    if (!x11_geometry(sx, entry, strip_width, &xs->geo)) {
         g_free(xs);
         return NULL;
     }

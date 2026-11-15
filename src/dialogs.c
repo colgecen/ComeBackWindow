@@ -15,6 +15,8 @@
 #define MARGIN 18
 
 static const gchar *language_codes[] = { "auto", "tr", "en" };
+static const gchar *style_codes[] = { "bar", "text" };
+static const gchar *style_names[] = { N_("Çubuk"), N_("Yazı") };
 static const gchar *language_names[] = {
     N_("Otomatik (sistem)"), N_("Türkçe"), N_("English")
 };
@@ -23,6 +25,8 @@ typedef struct {
     GtkWidget *autostart;
     GtkWidget *strip;
     GtkWidget *strip_width;
+    GtkWidget *strip_style;
+    GtkWidget *strip_text;
     GtkWidget *fallback_height;
     GtkWidget *peek;
     GtkWidget *peek_delay;
@@ -138,6 +142,31 @@ static GtkWidget *add_language(GtkWidget *box, const gchar *current)
     return widget;
 }
 
+static GtkWidget *add_strip_style(GtkWidget *box, const gchar *current)
+{
+    const gchar *names[] = {
+        _(style_names[0]), _(style_names[1]), NULL
+    };
+    GtkWidget *widget = gtk_drop_down_new_from_strings(names);
+    gint index = g_strcmp0(current, "text") == 0 ? 1 : 0;
+
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(widget), (guint)index);
+    gtk_box_append(GTK_BOX(box), form_row(_("Şerit görünümü"), widget));
+    return widget;
+}
+
+static GtkWidget *add_strip_text(GtkWidget *box, const gchar *text)
+{
+    GtkWidget *widget = gtk_entry_new();
+
+    gtk_editable_set_text(GTK_EDITABLE(widget),
+                          text != NULL ? text : "Masaüstü");
+    gtk_editable_set_max_width_chars(GTK_EDITABLE(widget), 32);
+    gtk_widget_set_hexpand(widget, TRUE);
+    gtk_box_append(GTK_BOX(box), form_row(_("Şerit yazısı"), widget));
+    return widget;
+}
+
 static GtkWidget *add_heading(GtkWidget *box, const gchar *text,
                               const gchar *subtitle)
 {
@@ -179,6 +208,8 @@ static GtkWidget *add_general_fields(GtkWidget *box, Form *form,
                              s->strip_enabled);
     form->strip_width = add_spin(box, _("Şerit genişliği (px)"),
                                  s->strip_width, 2, 24, 1);
+    form->strip_style = add_strip_style(box, s->strip_style);
+    form->strip_text = add_strip_text(box, s->strip_text);
     form->fallback_height = add_spin(box, _("Panel yoksa yedek yükseklik"),
                                      s->fallback_height, 20, 120, 2);
     return box;
@@ -204,11 +235,22 @@ static Settings form_read(const Form *form, const Settings *base)
     Settings s = *base;
 
     s.language = NULL;
+    s.strip_style = NULL;
+    s.strip_text = NULL;
     guint selected = form->language != NULL
         ? gtk_drop_down_get_selected(GTK_DROP_DOWN(form->language)) : 0;
 
     s.language = g_strdup(selected < G_N_ELEMENTS(language_codes)
                           ? language_codes[selected] : "auto");
+    guint style = form->strip_style != NULL
+        ? gtk_drop_down_get_selected(GTK_DROP_DOWN(form->strip_style)) : 0;
+
+    s.strip_style = g_strdup(style < G_N_ELEMENTS(style_codes)
+                             ? style_codes[style] : "bar");
+    s.strip_text = g_strdup(form->strip_text != NULL
+                            ? gtk_editable_get_text(GTK_EDITABLE(
+                                  form->strip_text))
+                            : "Masaüstü");
     if (form->autostart != NULL) {
         s.autostart = gtk_switch_get_active(GTK_SWITCH(form->autostart));
     }

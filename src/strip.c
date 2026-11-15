@@ -128,19 +128,99 @@ static gdouble arrow_direction(StripEdge edge)
     }
 }
 
+/* --- Yazı modu -------------------------------------------------------- */
+
+static void text_font_px(cairo_t *cr, gint px)
+{
+    cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL,
+                           CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, px);
+}
+
+/* Metni `max_width`e sığacak biçimde kırpar, sonuna üç nokta ekler. */
+static gchar *fit_text(cairo_t *cr, const gchar *text, gdouble max_width)
+{
+    glong len = g_utf8_strlen(text, -1);
+
+    for (glong keep = len - 1; keep > 0; keep--) {
+        gchar *prefix = g_utf8_substring(text, 0, keep);
+        gchar *candidate = g_strconcat(prefix, "…", NULL);
+        cairo_text_extents_t extents;
+
+        g_free(prefix);
+        cairo_text_extents(cr, candidate, &extents);
+        if (extents.x_advance <= max_width) {
+            return candidate;
+        }
+        g_free(candidate);
+    }
+    return g_strdup("…");
+}
+
+static void draw_text_strip(cairo_t *cr, gint width, gint height,
+                            gboolean hover, const gchar *text)
+{
+    if (!hover) {
+        cairo_set_source_rgba(cr, 0.13, 0.50, 0.72, 0.90);
+        cairo_rectangle(cr, 0, 0, width, height);
+        cairo_fill(cr);
+    }
+    if (text == NULL || *text == '\0') {
+        return;
+    }
+    gint font = MAX(7, (gint)floor(width * 0.82));
+    gdouble max_len = height - 10.0;
+
+    text_font_px(cr, font);
+    cairo_text_extents_t extents;
+
+    cairo_text_extents(cr, text, &extents);
+    while (extents.x_advance > max_len && font > 7) {
+        font--;
+        text_font_px(cr, font);
+        cairo_text_extents(cr, text, &extents);
+    }
+    gchar *fitted = NULL;
+
+    if (extents.x_advance > max_len) {
+        fitted = fit_text(cr, text, max_len);
+        text = fitted;
+        cairo_text_extents(cr, text, &extents);
+    }
+    cairo_save(cr);
+    cairo_translate(cr, width / 2.0, height / 2.0);
+    cairo_rotate(cr, -M_PI / 2.0);
+    gdouble x = -extents.x_bearing - extents.width / 2.0;
+    gdouble y = -(extents.y_bearing + extents.height / 2.0);
+
+    cairo_set_source_rgba(cr, 0, 0, 0, hover ? 0.85 : 0.55);
+    cairo_move_to(cr, x + 1.0, y + 1.0);
+    cairo_show_text(cr, text);
+    cairo_set_source_rgba(cr, 1, 1, 1, 1);
+    cairo_move_to(cr, x, y);
+    cairo_show_text(cr, text);
+    cairo_restore(cr);
+    g_free(fitted);
+}
+
 void strip_draw(cairo_t *cr, gint width, gint height, StripEdge edge,
-                gboolean hover, gboolean peek_active)
+                gboolean hover, gboolean peek_active, gboolean text_mode,
+                const gchar *text)
 {
     if (cr == NULL || width <= 0 || height <= 0) {
         return;
     }
-    gboolean vertical = width < height;
-    gdouble tint = peek_active ? 0.40 : (hover ? 0.28 : 0.0);
-
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
     cairo_set_source_rgba(cr, 0, 0, 0, 0);
     cairo_paint(cr);
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+    if (text_mode && text != NULL && *text != '\0') {
+        draw_text_strip(cr, width, height, hover, text);
+        return;
+    }
+    gboolean vertical = width < height;
+    gdouble tint = peek_active ? 0.40 : (hover ? 0.28 : 0.0);
 
     /* Mavi gövde: panel üzerinde de görünür yarı saydam şerit. */
     cairo_set_source_rgba(cr, 0.13, 0.50, 0.72, hover ? 0.92 : 0.95);
@@ -168,8 +248,8 @@ void strip_draw(cairo_t *cr, gint width, gint height, StripEdge edge,
     }
 
     /*
-     * Ok işareti yalnızca şerit yeterince kalınsa çizilir; varsayılan 6 px
-     * genişlikte ok okunaksız olur, mavi çizgi yeterli yön ipucu verir.
+     * Ok işareti yalnızca şerit yeterince kalınsa çizilir; varsayılan 10 px
+     * genişlikte küçük ok görünür, ince şeritte çizgi yeterli ipucu verir.
      */
     gdouble size = fmin(width, height) * 0.34;
 

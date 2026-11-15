@@ -116,6 +116,10 @@ static void test_roundtrip(void)
     out.peek_opacity = 0.2;
     out.shake_enabled = TRUE;
     out.tray_enabled = FALSE;
+    g_free(out.strip_style);
+    out.strip_style = g_strdup("text");
+    g_free(out.strip_text);
+    out.strip_text = g_strdup("Masaüstü");
     g_free(out.language);
     out.language = g_strdup("tr");
     out.first_run_done = TRUE;
@@ -135,6 +139,8 @@ static void test_roundtrip(void)
     CHECK(in.peek_opacity > 0.19 && in.peek_opacity < 0.21);
     CHECK_INT_EQ(in.shake_enabled, TRUE);
     CHECK_INT_EQ(in.tray_enabled, FALSE);
+    CHECK_STR_EQ(in.strip_style, "text");
+    CHECK_STR_EQ(in.strip_text, "Masaüstü");
     CHECK_STR_EQ(in.language, "tr");
     CHECK_INT_EQ(in.first_run_done, TRUE);
 
@@ -221,6 +227,8 @@ static void test_json(void)
     json = settings_to_json(&s);
     CHECK(json != NULL);
     CHECK(strstr(json, "\"strip_width\":8") != NULL);
+    CHECK(strstr(json, "\"strip_style\":\"bar\"") != NULL);
+    CHECK(strstr(json, "\"strip_text\":\"Masaüstü\"") != NULL);
     CHECK(strstr(json, "\"language\":\"en\"") != NULL);
     CHECK(strstr(json, "\"shake_enabled\":false") != NULL);
     g_free(json);

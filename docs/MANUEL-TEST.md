@@ -30,6 +30,9 @@ dosyasına yazın.
 | 2.3 | Panele bak | Şerit ekranın tam sağ alt köşesinde, panelin en ucunda |
 | 2.4 | `busctl --user get-property org.kde.KWin /KWin org.kde.KWin showingDesktop` | Tıklama sonrası değer değişir |
 | 2.5 | Tam ekran pencere açıkken | Şerit gizlenir |
+| 2.6 | Ayarlar > Şerit görünümü: Yazı, metin gir | Köşede aynı boyutta dikey yazı görünür |
+| 2.7 | Yazının üzerine gel | Zemin tamamen saydam, yalnız yazı kalır |
+| 2.8 | Yazıya tıkla | Masaüstü aç/kapat (çubukla aynı) |
 
 ## 3. Kısayollar
 

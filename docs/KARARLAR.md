@@ -89,3 +89,11 @@ Ek doğrulamalar:
   çizgi kullanılır; varsayılan genişlik 10 px'tir. Masaüstü açıkken şeride
   basıldığında KWin masaüstünü kendisi geri getirir; uygulama 400 ms
   içindeki geri getirme olayını görüp ikinci kez aç/kapat yapmaz.
+- **2026-11-16 — Yazı modu:** Şerit isteğe bağlı olarak yazı moduna alınabilir
+  (`strip_style=text`, `strip_text=<metin>`). Yazı modu çubukla **aynı
+  geometriyi** kullanır: panel kalınlığı kadar yükseklik, `strip_width`
+  genişlik, sağ alt köşeye sıfır boşluk. Metin dikey (-90°) çizilir ve şerit
+  genişliğine/yüksekliğine göre küçültülüp gerekirse "…" ile kısaltılır.
+  Hover'da zemin tamamen saydam olur, yalnız yazı kalır; tıklama aynı
+  masaüstü aç/kapat işlevini görür. Varsayılan `bar` olduğu için metin
+  girilmezse eski çubuk korunur.

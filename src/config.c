@@ -47,6 +47,8 @@ void settings_init_defaults(Settings *s)
     s->autostart = TRUE;
     s->strip_enabled = TRUE;
     s->strip_width = 10;
+    s->strip_style = g_strdup("bar");
+    s->strip_text = g_strdup("Masaüstü");
     s->fallback_height = 44;
     s->peek_enabled = TRUE;
     s->peek_delay_ms = 500;
@@ -63,6 +65,8 @@ void settings_clear(Settings *s)
         return;
     }
     g_clear_pointer(&s->language, g_free);
+    g_clear_pointer(&s->strip_style, g_free);
+    g_clear_pointer(&s->strip_text, g_free);
 }
 
 gchar *config_dir(void)
@@ -118,6 +122,28 @@ gboolean settings_backup_corrupt(GError **error)
     return ok;
 }
 
+/* Metni kırpar, boş/geçersizse varsayılana düşer ve uzunluğu sınırlar. */
+static gchar *strip_text_valid(const gchar *text)
+{
+    if (text == NULL) {
+        return g_strdup("Masaüstü");
+    }
+    gchar *copy = g_strdup(text);
+
+    g_strstrip(copy);
+    if (*copy == '\0' || !g_utf8_validate(copy, -1, NULL)) {
+        g_free(copy);
+        return g_strdup("Masaüstü");
+    }
+    if (g_utf8_strlen(copy, -1) > CBW_STRIP_TEXT_MAX) {
+        gchar *cut = g_utf8_substring(copy, 0, CBW_STRIP_TEXT_MAX);
+
+        g_free(copy);
+        copy = cut;
+    }
+    return copy;
+}
+
 void settings_clamp(Settings *s)
 {
     g_return_if_fail(s != NULL);
@@ -136,6 +162,14 @@ void settings_clamp(Settings *s)
         g_free(s->language);
         s->language = g_strdup("auto");
     }
+    if (g_strcmp0(s->strip_style, "text") != 0) {
+        g_free(s->strip_style);
+        s->strip_style = g_strdup("bar");
+    }
+    gchar *text = strip_text_valid(s->strip_text);
+
+    g_free(s->strip_text);
+    s->strip_text = text;
 }
 
 static gboolean get_bool(GKeyFile *kf, const gchar *key, gboolean fallback)
@@ -192,6 +226,16 @@ static void load_group(Settings *s, GKeyFile *kf)
         g_free(s->language);
         s->language = lang;
     }
+    gchar *style = g_key_file_get_string(kf, GROUP, "strip_style", NULL);
+    if (style != NULL) {
+        g_free(s->strip_style);
+        s->strip_style = style;
+    }
+    gchar *text = g_key_file_get_string(kf, GROUP, "strip_text", NULL);
+    if (text != NULL) {
+        g_free(s->strip_text);
+        s->strip_text = text;
+    }
 }
 
 gboolean settings_load(Settings *s, GError **error)
@@ -228,6 +272,11 @@ static void write_group(const Settings *s, GKeyFile *kf)
     g_key_file_set_boolean(kf, GROUP, "autostart", s->autostart);
     g_key_file_set_boolean(kf, GROUP, "strip_enabled", s->strip_enabled);
     g_key_file_set_integer(kf, GROUP, "strip_width", s->strip_width);
+    g_key_file_set_string(kf, GROUP, "strip_style",
+                          s->strip_style != NULL ? s->strip_style : "bar");
+    g_key_file_set_string(kf, GROUP, "strip_text",
+                          s->strip_text != NULL ? s->strip_text
+                                                : "Masaüstü");
     g_key_file_set_integer(kf, GROUP, "fallback_height", s->fallback_height);
     g_key_file_set_boolean(kf, GROUP, "peek_enabled", s->peek_enabled);
     g_key_file_set_integer(kf, GROUP, "peek_delay_ms", s->peek_delay_ms);
@@ -272,6 +321,40 @@ gboolean settings_save(const Settings *s, GError **error)
     return ok;
 }
 
+/* JSON dizesi: yalnızca zorunlu kaçışlar; UTF-8 aynen korunur. */
+static gchar *json_escape(const gchar *text)
+{
+    GString *out = g_string_new(NULL);
+
+    for (const guchar *p = (const guchar *)(text != NULL ? text : ""); *p; p++) {
+        switch (*p) {
+        case '"':
+            g_string_append(out, "\\\"");
+            break;
+        case '\\':
+            g_string_append(out, "\\\\");
+            break;
+        case '\n':
+            g_string_append(out, "\\n");
+            break;
+        case '\r':
+            g_string_append(out, "\\r");
+            break;
+        case '\t':
+            g_string_append(out, "\\t");
+            break;
+        default:
+            if (*p < 0x20) {
+                g_string_append_printf(out, "\\u%04x", *p);
+            } else {
+                g_string_append_c(out, (gchar)*p);
+            }
+            break;
+        }
+    }
+    return g_string_free(out, FALSE);
+}
+
 gchar *settings_to_json(const Settings *s)
 {
     g_return_val_if_fail(s != NULL, NULL);
@@ -281,15 +364,21 @@ gchar *settings_to_json(const Settings *s)
 
     g_ascii_formatd(opacity, sizeof(opacity), "%.3f", s->peek_opacity);
 
-    gchar *lang = g_strescape(s->language != NULL ? s->language : "auto", NULL);
+    gchar *lang = json_escape(s->language != NULL ? s->language : "auto");
+    gchar *style = json_escape(s->strip_style != NULL ? s->strip_style : "bar");
+    gchar *text = json_escape(s->strip_text != NULL ? s->strip_text
+                                                    : "Masaüstü");
     gchar *json = g_strdup_printf(
         "{\"autostart\":%s,\"strip_enabled\":%s,\"strip_width\":%d,"
+        "\"strip_style\":\"%s\",\"strip_text\":\"%s\","
         "\"fallback_height\":%d,\"peek_enabled\":%s,\"peek_delay_ms\":%d,"
         "\"peek_opacity\":%s,\"shake_enabled\":%s,\"tray_enabled\":%s,"
         "\"language\":\"%s\",\"first_run_done\":%s}",
         s->autostart ? "true" : "false",
         s->strip_enabled ? "true" : "false",
         s->strip_width,
+        style,
+        text,
         s->fallback_height,
         s->peek_enabled ? "true" : "false",
         s->peek_delay_ms,
@@ -300,5 +389,7 @@ gchar *settings_to_json(const Settings *s)
         s->first_run_done ? "true" : "false");
 
     g_free(lang);
+    g_free(style);
+    g_free(text);
     return json;
 }

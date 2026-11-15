@@ -295,6 +295,8 @@ void app_strip_press(App *app)
         return;
     }
     app->click_shown_at_press = app->desktop_shown;
+    app_log(app, "şerit basma: masaüstü=%s", app->desktop_shown ? "açık"
+                                                               : "kapalı");
 }
 
 /*
@@ -316,7 +318,9 @@ static gboolean strip_click_cb(gpointer data)
                 "değiştirildi, ek işlem yok");
         return G_SOURCE_REMOVE;
     }
-    app_log(app, "şeride tıklandı: masaüstü aç/kapat");
+    app_log(app, "şeride tıklandı: masaüstü aç/kapat (basma=%s, şimdi=%s)",
+            app->click_shown_at_press ? "açık" : "kapalı",
+            app->desktop_shown ? "açık" : "kapalı");
     app_send_command(app, "toggle-desktop");
     return G_SOURCE_REMOVE;
 }

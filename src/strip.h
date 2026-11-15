@@ -83,6 +83,7 @@ void strip_set_callbacks(Strip *strip, const StripCallbacks *callbacks,
 
 /* Şerit çizimi: arka plan + ok. Hem Wayland hem X11 kullanır. */
 void strip_draw(cairo_t *cr, gint width, gint height, StripEdge edge,
-                gboolean hover, gboolean peek_active);
+                gboolean hover, gboolean peek_active, gboolean text_mode,
+                const gchar *text);
 
 G_END_DECLS

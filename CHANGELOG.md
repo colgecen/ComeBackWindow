@@ -24,6 +24,8 @@
 - **Kısayol çakışma yönetimi**: KDE'nin yerel kısayollarını korur,
   yedekler ve `--restore-shortcuts` ile geri yükler.
 - **Otomatik başlatma**: oturum açılışında çalıştır dosyası yönetimi.
+- **Yazı modu**: şerit çubuğu yerine köşeye yapışık dikey yazı; metin
+  ayarlardan girilir, hover'da zemin saydamlaşıp yalnız yazı kalır.
 - **Türkçe / İngilizce arayüz**: gettext katalogları (`po/tr.po`,
   `po/en.po`) ve KWin betiği için `logic.js` sözlüğü.
 - **Marka**: geri oku logosu, 16-256 px simgeler, tanıtım kapak görseli.

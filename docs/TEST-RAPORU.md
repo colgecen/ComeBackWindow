@@ -55,7 +55,10 @@
 | 1.3 | İlk açılış sihirbazı | PASS | Sihirbaz açıldı, ayarlar kaydedildi |
 | 2.1 | Şeride tıkla → masaüstü açılır | PASS | `showingDesktop=true`, `desktop-shown` |
 | 2.2 | Tekrar tıkla → masaüstü geri gelir | PASS | `showingDesktop=false`, `desktop-restored` |
-| 2.3 | Şerit ekranın sağ alt köşesinde | PASS | Yüzey 6×68, panelin son diliminde (y=1012-1080) |
+| 2.3 | Şerit ekranın sağ alt köşesinde | PASS | Yüzey 10×68, panelin son diliminde (y=1012-1080) |
+| 2.6 | Yazı modu (dikey metin, aynı boyut) | PASS | 10×68 yüzey, "Masaüstü" dikey çizildi |
+| 2.7 | Hover'da yalnız yazı | PASS | Zemin saydam, metin görünür |
+| 2.8 | Yazıya tıkla | PASS | `showingDesktop` iki yönde değişti |
 | 3.1 | Meta+D | PASS | KDE yerel kısayolu çalışıyor |
 | 3.5 | Meta+Home (diğerlerini küçült) | PASS | Küçültülen yığını doldu |
 | 3.6 | Meta+Shift+M (geri getir) | PASS | Yığın boşaldı |

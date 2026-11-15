@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Come Back Window 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-15 21:32+0300\n"
+"POT-Creation-Date: 2026-11-15 23:54+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,158 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: src/dialogs.c:19
+msgid "Çubuk"
+msgstr ""
+
+#: src/dialogs.c:19
+msgid "Yazı"
+msgstr ""
+
+#: src/dialogs.c:21
+msgid "Otomatik (sistem)"
+msgstr ""
+
+#: src/dialogs.c:21
+msgid "Türkçe"
+msgstr ""
+
+#: src/dialogs.c:21
+msgid "English"
+msgstr ""
+
+#: src/dialogs.c:141
+msgid "Arayüz dili"
+msgstr ""
+
+#: src/dialogs.c:154
+msgid "Şerit görünümü"
+msgstr ""
+
+#: src/dialogs.c:166
+msgid "Şerit yazısı"
+msgstr ""
+
+#: src/dialogs.c:205
+msgid "Oturum açılışında başlat"
+msgstr ""
+
+#: src/dialogs.c:207
+msgid "Köşe şeridini göster"
+msgstr ""
+
+#: src/dialogs.c:209
+msgid "Şerit genişliği (px)"
+msgstr ""
+
+#: src/dialogs.c:213
+msgid "Panel yoksa yedek yükseklik"
+msgstr ""
+
+#: src/dialogs.c:222
+msgid "Peek gecikmesi (ms)"
+msgstr ""
+
+#: src/dialogs.c:224
+msgid "Peek opaklığı"
+msgstr ""
+
+#: src/dialogs.c:227
+msgid "Tepsi simgesi"
+msgstr ""
+
+#: src/dialogs.c:304
+#, c-format
+msgid "Ayarlar kaydedilemedi: %s"
+msgstr ""
+
+#: src/dialogs.c:306
+msgid "bilinmeyen hata"
+msgstr ""
+
+#: src/dialogs.c:350
+msgid "Kısayollar açılamadı"
+msgstr ""
+
+#: src/dialogs.c:358
+msgid "Kısayollar…"
+msgstr ""
+
+#: src/dialogs.c:359
+msgid "İptal"
+msgstr ""
+
+#: src/dialogs.c:360
+msgid "Kaydet"
+msgstr ""
+
+#: src/dialogs.c:383
+msgid "Come Back Window — Ayarlar"
+msgstr ""
+
+#: src/dialogs.c:385
+msgid "<b>Ayarlar</b>"
+msgstr ""
+
+#: src/dialogs.c:386
+msgid "Değişiklikler Kaydet'e basınca uygulanır."
+msgstr ""
+
+#: src/dialogs.c:494
+msgid "<b>Hoş geldiniz</b>"
+msgstr ""
+
+#: src/dialogs.c:495
+msgid ""
+"Come Back Window, Windows tarzı pencere kısayollarını KDE Plasma 6'ya taşır. "
+"Birkaç adımda ayarlayalım."
+msgstr ""
+
+#: src/dialogs.c:505
+msgid "<b>Başlangıç ve şerit</b>"
+msgstr ""
+
+#: src/dialogs.c:514
+msgid "<b>Efektler</b>"
+msgstr ""
+
+#: src/dialogs.c:515
+msgid "Bu ayarları daha sonra tepsi menüsünden değiştirebilirsiniz."
+msgstr ""
+
+#: src/dialogs.c:524
+msgid "Geri"
+msgstr ""
+
+#: src/dialogs.c:525
+msgid "İleri"
+msgstr ""
+
+#: src/dialogs.c:526
+msgid "Başla"
+msgstr ""
+
+#: src/dialogs.c:555
+msgid "Come Back Window — İlk Açılış"
+msgstr ""
+
+#: src/kwin_script.c:315
+msgid ""
+"KWin betiği yüklenemedi; yeniden denenecek. Kısayollar şimdilik çalışmıyor."
+msgstr ""
+
+#: src/shortcuts.c:527
+msgid "Come Back Window kullanıyor"
+msgstr ""
+
+#: src/shortcuts.c:532
+msgid "KDE'nin yerel kısayolu kullanılıyor"
+msgstr ""
+
+#: src/shortcuts.c:535
+msgid "çakışmayan alternatif tuş kullanılacak"
+msgstr ""
 
 #: src/shortcuts.c:571
 #, c-format
@@ -26,179 +178,43 @@ msgid ""
 "keys"
 msgstr ""
 
-#: src/dialogs.c:342
-msgid "<b>Ayarlar</b>"
-msgstr ""
-
-#: src/dialogs.c:462
-msgid "<b>Başlangıç ve şerit</b>"
-msgstr ""
-
-#: src/dialogs.c:471
-msgid "<b>Efektler</b>"
-msgstr ""
-
-#: src/dialogs.c:451
-msgid "<b>Hoş geldiniz</b>"
-msgstr ""
-
-#: src/dialogs.c:136
-msgid "Arayüz dili"
-msgstr ""
-
-#: src/dialogs.c:261
-#, c-format
-msgid "Ayarlar kaydedilemedi: %s"
-msgstr ""
-
-#: src/tray_menu.c:36
-msgid "Ayarlar…"
-msgstr ""
-
-#: src/dialogs.c:483
-msgid "Başla"
-msgstr ""
-
-#: src/dialogs.c:472
-msgid "Bu ayarları daha sonra tepsi menüsünden değiştirebilirsiniz."
-msgstr ""
-
-#: src/shortcuts.c:527
-msgid "Come Back Window kullanıyor"
-msgstr ""
-
-#: src/dialogs.c:340
-msgid "Come Back Window — Ayarlar"
-msgstr ""
-
-#: src/dialogs.c:512
-msgid "Come Back Window — İlk Açılış"
-msgstr ""
-
-#: src/dialogs.c:452
-msgid ""
-"Come Back Window, Windows tarzı pencere kısayollarını KDE Plasma 6'ya taşır. "
-"Birkaç adımda ayarlayalım."
-msgstr ""
-
-#: src/dialogs.c:343
-msgid "Değişiklikler Kaydet'e basınca uygulanır."
-msgstr ""
-
-#: src/tray_menu.c:31
-msgid "Diğerlerini Küçült"
-msgstr ""
-
-#: src/dialogs.c:19
-msgid "English"
-msgstr ""
-
-#: src/dialogs.c:481
-msgid "Geri"
-msgstr ""
-
-#: src/tray_menu.c:38
-msgid "Hakkında…"
-msgstr ""
-
-#: src/shortcuts.c:532
-msgid "KDE'nin yerel kısayolu kullanılıyor"
-msgstr ""
-
-#: src/kwin_script.c:315
-msgid ""
-"KWin betiği yüklenemedi; yeniden denenecek. Kısayollar şimdilik çalışmıyor."
-msgstr ""
-
-#: src/dialogs.c:317
-msgid "Kaydet"
-msgstr ""
-
-#: src/dialogs.c:177
-msgid "Köşe şeridini göster"
-msgstr ""
-
-#: src/tray_menu.c:33
-msgid "Küçültülenleri Geri Getir"
-msgstr ""
-
-#: src/dialogs.c:307
-msgid "Kısayollar açılamadı"
-msgstr ""
-
-#: src/dialogs.c:315
-msgid "Kısayollar…"
+#: src/tray.c:145 src/tray.c:372
+msgid "Masaüstü kısayolları"
 msgstr ""
 
 #: src/tray.c:371
 msgid "Masaüstü gösteriliyor"
 msgstr ""
 
-#: src/tray.c:145 src/tray.c:372
-msgid "Masaüstü kısayolları"
-msgstr ""
-
 #: src/tray_menu.c:29
 msgid "Masaüstünü Göster"
 msgstr ""
 
-#: src/dialogs.c:19
-msgid "Otomatik (sistem)"
+#: src/tray_menu.c:31
+msgid "Diğerlerini Küçült"
 msgstr ""
 
-#: src/dialogs.c:175
-msgid "Oturum açılışında başlat"
+#: src/tray_menu.c:33
+msgid "Küçültülenleri Geri Getir"
 msgstr ""
 
-#: src/dialogs.c:181
-msgid "Panel yoksa yedek yükseklik"
-msgstr ""
-
-#: src/dialogs.c:190
-msgid "Peek gecikmesi (ms)"
-msgstr ""
-
-#: src/dialogs.c:192
-msgid "Peek opaklığı"
-msgstr ""
-
-#: src/tray_menu.c:413
-#, c-format
-msgid "Sürüm %s — Windows tarzı pencere kısayolları"
-msgstr ""
-
-#: src/dialogs.c:195
-msgid "Tepsi simgesi"
-msgstr ""
-
-#: src/dialogs.c:19
-msgid "Türkçe"
-msgstr ""
-
-#: src/dialogs.c:263
-msgid "bilinmeyen hata"
-msgstr ""
-
-#: src/tray_menu.c:39
-msgid "Çıkış"
-msgstr ""
-
-#: src/shortcuts.c:535
-msgid "çakışmayan alternatif tuş kullanılacak"
-msgstr ""
-
-#: src/dialogs.c:482
-msgid "İleri"
+#: src/tray_menu.c:36
+msgid "Ayarlar…"
 msgstr ""
 
 #: src/tray_menu.c:37
 msgid "İlk Açılış Sihirbazı…"
 msgstr ""
 
-#: src/dialogs.c:316
-msgid "İptal"
+#: src/tray_menu.c:38
+msgid "Hakkında…"
 msgstr ""
 
-#: src/dialogs.c:179
-msgid "Şerit genişliği (px)"
+#: src/tray_menu.c:39
+msgid "Çıkış"
+msgstr ""
+
+#: src/tray_menu.c:413
+#, c-format
+msgid "Sürüm %s — Windows tarzı pencere kısayolları"
 msgstr ""

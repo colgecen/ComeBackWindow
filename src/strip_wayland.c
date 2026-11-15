@@ -44,6 +44,8 @@ typedef struct {
     gboolean configured;
     gboolean hover;
     gboolean redraw;
+    gboolean text_mode;
+    gchar *text;
 } StripSurface;
 
 typedef struct {
@@ -52,6 +54,8 @@ typedef struct {
     gint thickness;
     gdouble scale;
     gboolean fullscreen;
+    gboolean text_mode;
+    gchar *text;
 } StripSpec;
 
 typedef struct {
@@ -562,7 +566,7 @@ static gboolean surface_draw(StripWayland *bw, StripSurface *ts)
     cairo_scale(cr, (gdouble)width / ts->geo.width,
                 (gdouble)height / ts->geo.height);
     strip_draw(cr, ts->geo.width, ts->geo.height, ts->geo.edge, ts->hover,
-               bw->strip->peek_active);
+               bw->strip->peek_active, ts->text_mode, ts->text);
     cairo_destroy(cr);
     cairo_surface_flush(cs);
     cairo_surface_destroy(cs);
@@ -617,6 +621,7 @@ static void surfaces_clear(StripWayland *bw)
     for (guint i = 0; i < bw->surfaces->len; i++) {
         StripSurface *ts = g_ptr_array_index(bw->surfaces, i);
 
+        g_free(ts->text);
         buffers_free(ts);
         if (ts->layer != NULL) {
             zwlr_layer_surface_v1_destroy(ts->layer);
@@ -629,17 +634,26 @@ static void surfaces_clear(StripWayland *bw)
     g_ptr_array_set_size(bw->surfaces, 0);
 }
 
+/* Yazı modu da çubukla aynı geometriyi kullanır; yalnız çizim değişir. */
+static gboolean spec_geometry(const StripSpec *spec, gint strip_width,
+                              StripGeometry *geo)
+{
+    return strip_geometry_calc(spec->edge, spec->thickness, strip_width,
+                               spec->scale, geo);
+}
+
 static StripSurface *surface_create(StripWayland *bw, const StripSpec *spec,
                                     gint strip_width)
 {
     StripSurface *ts = g_new0(StripSurface, 1);
 
     ts->strip = bw->strip;
-    if (!strip_geometry_calc(spec->edge, spec->thickness, strip_width,
-                             spec->scale, &ts->geo)) {
+    if (!spec_geometry(spec, strip_width, &ts->geo)) {
         g_free(ts);
         return NULL;
     }
+    ts->text_mode = spec->text_mode;
+    ts->text = g_strdup(spec->text);
     ts->output = find_output(bw, spec->output);
     ts->surface = wl_compositor_create_surface(bw->compositor);
     if (ts->surface == NULL) {
@@ -679,7 +693,10 @@ static StripSurface *surface_create(StripWayland *bw, const StripSpec *spec,
 static void specs_clear(StripWayland *bw)
 {
     for (guint i = 0; i < bw->specs->len; i++) {
-        g_free(g_array_index(bw->specs, StripSpec, i).output);
+        StripSpec *spec = &g_array_index(bw->specs, StripSpec, i);
+
+        g_free(spec->output);
+        g_free(spec->text);
     }
     g_array_set_size(bw->specs, 0);
 }
@@ -701,7 +718,9 @@ void strip_wayland_update(Strip *strip)
             .edge = strip_edge_from_string(entry->edge),
             .thickness = entry->thickness,
             .scale = entry->scale > 0 ? entry->scale : 1.0,
-            .fullscreen = entry->fullscreen
+            .fullscreen = entry->fullscreen,
+            .text_mode = g_strcmp0(app->settings.strip_style, "text") == 0,
+            .text = g_strdup(app->settings.strip_text)
         };
 
         g_array_append_val(bw->specs, spec);
@@ -718,8 +737,7 @@ static gboolean spec_matches(StripSurface *ts, const StripSpec *spec,
 {
     StripGeometry geo;
 
-    if (!strip_geometry_calc(spec->edge, spec->thickness, strip_width,
-                             spec->scale, &geo)) {
+    if (!spec_geometry(spec, strip_width, &geo)) {
         return FALSE;
     }
     return ts->geo.width == geo.width && ts->geo.height == geo.height;
@@ -779,6 +797,9 @@ static void apply_specs(StripWayland *bw)
             reuse = surface_create(bw, spec, strip_width);
             app_log(bw->strip->app, "şerit yüzeyi oluşturuldu");
         } else {
+            reuse->text_mode = spec->text_mode;
+            g_free(reuse->text);
+            reuse->text = g_strdup(spec->text);
             app_log(bw->strip->app, "şerit yüzeyi yeniden kullanıldı");
         }
         if (reuse != NULL) {
