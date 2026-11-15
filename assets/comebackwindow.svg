@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Come Back Window logosu: masaüstüne dönen pencere + sağ alt şerit -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3daee9"/>
+      <stop offset="1" stop-color="#1d7fb8"/>
+    </linearGradient>
+  </defs>
+  <rect x="12" y="12" width="232" height="232" rx="52" fill="url(#bg)"/>
+  <g>
+    <rect x="48" y="56" width="150" height="112" rx="14" fill="#ffffff"/>
+    <rect x="48" y="56" width="150" height="26" rx="14" fill="#eaf6fd"/>
+    <rect x="48" y="70" width="150" height="12" fill="#eaf6fd"/>
+    <circle cx="66" cy="69" r="4" fill="#9fd4ee"/>
+    <circle cx="80" cy="69" r="4" fill="#9fd4ee"/>
+    <rect x="62" y="96" width="56" height="56" rx="8" fill="#bfe4f6"/>
+    <rect x="128" y="96" width="56" height="56" rx="8" fill="#bfe4f6"/>
+  </g>
+  <rect x="196" y="112" width="14" height="100" rx="7" fill="#ffc857"/>
+</svg>
