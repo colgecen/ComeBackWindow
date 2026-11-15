@@ -10,6 +10,7 @@
  *   4. Doğrulanamazsa yerel kısayol korunur (masaüstü/kapat için) veya
  *      çakışmayan alternatif tuş kullanılır (küçült/büyüt için).
  */
+#include "i18n.h"
 #include "shortcuts.h"
 
 #include "config.h"
@@ -522,13 +523,16 @@ static gboolean check_binding(App *app, const GPtrArray *infos,
     if (binding->core && own != NULL
         && shortcut_info_has_key(own, binding->key)
         && take_over(app, binding, native)) {
-        append_conflict(conflicts, binding, "Come Back Window kullanıyor");
+        append_conflict(conflicts, binding,
+                            _("Come Back Window kullanıyor"));
         return set_flag(flag, FALSE);
     }
     if (binding->core) {
-        append_conflict(conflicts, binding, "KDE'nin yerel kısayolu kullanılıyor");
+        append_conflict(conflicts, binding,
+                            _("KDE'nin yerel kısayolu kullanılıyor"));
     } else {
-        append_conflict(conflicts, binding, "çakışmayan alternatif tuş kullanılacak");
+        append_conflict(conflicts, binding,
+                            _("çakışmayan alternatif tuş kullanılacak"));
     }
     return set_flag(flag, TRUE);
 }
@@ -564,10 +568,10 @@ void shortcuts_check(App *app)
         app_log(app, "kısayol çakışmaları:\n%s", conflicts->str);
         if (!app->shortcuts_warned) {
             gchar *body = g_strdup_printf(
-                "%s\n\nKDE Sistem Ayarları > Kısayollar bölümünden "
-                "düzenleyebilirsiniz: kcmshell6 keys", conflicts->str);
+                _("%s\n\nKDE Sistem Ayarları > Kısayollar bölümünden "
+                  "düzenleyebilirsiniz: kcmshell6 keys"), conflicts->str);
 
-            app_notify(app, "Come Back Window: kısayol çakışması", body);
+            app_notify(app, "Come Back Window", body);
             g_free(body);
             app->shortcuts_warned = TRUE;
         }

@@ -5,6 +5,7 @@
  * (bkz. tray_menu.c). Simge, tema simgesi yoksa çizilen 22 px turuncu
  * "geri" okuyla sağlanır.
  */
+#include "i18n.h"
 #include "tray.h"
 
 #include "dialogs.h"
@@ -141,7 +142,7 @@ static GVariant *empty_pixmap(void)
 static GVariant *tooltip(Tray *tray)
 {
     const gchar *detail = tray->status != NULL ? tray->status
-        : "Masaüstü kısayolları";
+        : _("Masaüstü kısayolları");
 
     return g_variant_new("(s@a(iiay)ss)", "", empty_pixmap(),
                          "Come Back Window", detail);
@@ -367,8 +368,8 @@ void tray_update_status(Tray *tray)
     }
     g_free(tray->status);
     tray->status = g_strdup(tray->app->desktop_shown
-                                ? "Masaüstü gösteriliyor"
-                                : "Masaüstü kısayolları");
+                                ? _("Masaüstü gösteriliyor")
+                                : _("Masaüstü kısayolları"));
     GError *error = NULL;
 
     g_dbus_connection_emit_signal(tray->app->bus, NULL, SNI_PATH, SNI_IFACE,

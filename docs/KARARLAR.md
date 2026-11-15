@@ -65,3 +65,13 @@ Ek doğrulamalar:
   bırakılabilirse özgün tuşlar `~/.config/comebackwindow/shortcuts-backup.ini`
   dosyasına yazılır. `--restore-shortcuts` bu dosyayı okur, yazar ve sonucu
   doğrular; doğrulanamazsa dosya korunur ve hata döner.
+- **2026-11-15 — Çeviri kaynak dili:** v1.0.0'da kaynak dil Türkçedir;
+  `msgid` metinleri Türkçe, İngilizce karşılıklar `po/en.po` içindedir.
+  Böylece mevcut arayüz metinleri değiştirilmeden gettext altyapısı
+  eklenebildi; `po/tr.po` kaynak dili kataloğu olarak boş `msgstr` taşır ve
+  gettext zaten `msgid`e düşer. Arayüz dili ayarı `auto` değilse
+  `LANGUAGE` ortam değişkeni gettext ilk çağrısından önce ayarlanır.
+- **2026-11-15 — KWin betiği metinleri:** KWin QML betiği uygulamanın
+  gettext kataloğunu yükleyemediği için kısayol adları `logic.js` içindeki
+  küçük bir sözlükten (`STRINGS`) seçilir; `tr()` bilinmeyen anahtarda
+  Türkçeye düşer, `auto` dilde sistem yereli `Qt.locale()` ile çözülür.

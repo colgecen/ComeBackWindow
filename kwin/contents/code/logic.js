@@ -574,6 +574,60 @@ function shakeDetector(config) {
     };
 }
 
+/* --- Arayüz metinleri ------------------------------------------------- */
+
+/*
+ * Kısayol adları KWin'in genel kısayol listesinde görünür. Uygulama dili
+ * Türkçe veya İngilizce olabildiği için metinler burada tutulur; QML
+ * tarafı `tr()` ile seçer. Bilinmeyen anahtar Türkçe karşılığa düşer.
+ */
+var STRINGS = {
+    "tr": {
+        "show-desktop": "Masaüstünü Göster",
+        "show-desktop-alt": "Masaüstünü Göster (alternatif)",
+        "minimize": "Pencereyi Küçült",
+        "maximize": "Pencereyi Büyüt",
+        "minimize-others": "Aktif Hariç Hepsini Küçült",
+        "restore-all": "Küçültülenleri Geri Getir",
+        "close": "Pencereyi Kapat",
+        "cmd-desktop": "Komut — Masaüstü",
+        "cmd-peek-begin": "Komut — Peek Başlat",
+        "cmd-peek-end": "Komut — Peek Bitir",
+        "cmd-peek-toggle": "Komut — Peek Aç/Kapat",
+        "cmd-minimize-others": "Komut — Diğerlerini Küçült",
+        "cmd-restore-all": "Komut — Hepsini Geri Getir",
+        "cmd-settings-changed": "Komut — Ayarlar Değişti",
+        "cmd-dump-state": "Komut — Durum Dökümü"
+    },
+    "en": {
+        "show-desktop": "Show Desktop",
+        "show-desktop-alt": "Show Desktop (alternative)",
+        "minimize": "Minimize Window",
+        "maximize": "Maximize Window",
+        "minimize-others": "Minimize All Except Active",
+        "restore-all": "Restore Minimized Windows",
+        "close": "Close Window",
+        "cmd-desktop": "Command — Desktop",
+        "cmd-peek-begin": "Command — Begin Peek",
+        "cmd-peek-end": "Command — End Peek",
+        "cmd-peek-toggle": "Command — Toggle Peek",
+        "cmd-minimize-others": "Command — Minimize Others",
+        "cmd-restore-all": "Command — Restore All",
+        "cmd-settings-changed": "Command — Settings Changed",
+        "cmd-dump-state": "Command — Dump State"
+    }
+};
+
+function tr(language, key) {
+    var lang = typeof language === "string" ? language : "tr";
+    var table = STRINGS[lang] || STRINGS.tr;
+
+    if (table[key] !== undefined) {
+        return table[key];
+    }
+    return STRINGS.tr[key] !== undefined ? STRINGS.tr[key] : key;
+}
+
 /* --- Node uyumu ------------------------------------------------------- */
 
 if (typeof module !== "undefined" && module.exports) {
@@ -594,6 +648,7 @@ if (typeof module !== "undefined" && module.exports) {
         shakeDetector: shakeDetector,
         onClosed: onClosed,
         onMinimizedChanged: onMinimizedChanged,
+        tr: tr,
         winId: winId
     };
 }

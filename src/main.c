@@ -8,6 +8,7 @@
 #include "cli.h"
 #include "dbus_service.h"
 #include "dialogs.h"
+#include "i18n.h"
 #include "kwin_script.h"
 #include "peek.h"
 #include "shortcuts.h"
@@ -373,6 +374,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    i18n_init(app->settings.language);
     app->loop = g_main_loop_new(NULL, FALSE);
     g_unix_signal_add(SIGINT, on_signal, &run);
     g_unix_signal_add(SIGTERM, on_signal, &run);

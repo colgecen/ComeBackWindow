@@ -140,6 +140,17 @@ Item {
         root.applyShortcutPassivity();
     }
 
+    /* Etkin arayüz dili; "auto" ise sistem yereline göre seçilir. */
+    function uiLanguage() {
+        var lang = root.settings.language;
+
+        if (lang === "auto" || !lang) {
+            var name = Qt.locale().name || "tr_TR";
+            return name.substring(0, 2);
+        }
+        return String(lang);
+    }
+
     function fetchSettings() {
         root.dbusCall("GetSettings", [], function(ret) {
             if (ret && ret.length > 0) {
@@ -247,7 +258,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: showDesktop
         name: "cbw-show-desktop"
-        text: "Come Back Window: Masaüstünü Göster"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "show-desktop")
         sequence: "Meta+D"
         onActivated: root.toggleDesktop()
     }
@@ -255,7 +266,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: showDesktopAlt
         name: "cbw-show-desktop-alt"
-        text: "Come Back Window: Masaüstünü Göster (alternatif)"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "show-desktop-alt")
         sequence: "Meta+M"
         onActivated: root.toggleDesktop()
     }
@@ -263,7 +274,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: minimizeShortcut
         name: "cbw-minimize"
-        text: "Come Back Window: Pencereyi Küçült"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "minimize")
         sequence: "Meta+Down"
         onActivated: root.handleMinimize()
     }
@@ -271,7 +282,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: maximizeShortcut
         name: "cbw-maximize"
-        text: "Come Back Window: Pencereyi Büyüt"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "maximize")
         sequence: "Meta+Up"
         onActivated: root.handleMaximize()
     }
@@ -279,7 +290,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: minimizeOthersShortcut
         name: "cbw-minimize-others"
-        text: "Come Back Window: Aktif Hariç Hepsini Küçült"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "minimize-others")
         sequence: "Meta+Home"
         onActivated: root.handleMinimizeOthers()
     }
@@ -287,7 +298,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: restoreAllShortcut
         name: "cbw-restore-all"
-        text: "Come Back Window: Küçültülenleri Geri Getir"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "restore-all")
         sequence: "Meta+Shift+M"
         onActivated: root.handleRestoreAll()
     }
@@ -295,7 +306,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: closeShortcut
         name: "cbw-close"
-        text: "Come Back Window: Pencereyi Kapat"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "close")
         sequence: "Alt+F4"
         onActivated: root.handleClose()
     }
@@ -304,7 +315,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: cmdToggle
         name: "cbw-cmd-toggle-desktop"
-        text: "Come Back Window: Komut — Masaüstü"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "cmd-desktop")
         sequence: ""
         onActivated: root.toggleDesktop()
     }
@@ -312,7 +323,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: cmdPeekBegin
         name: "cbw-cmd-peek-begin"
-        text: "Come Back Window: Komut — Peek Başlat"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "cmd-peek-begin")
         sequence: ""
         onActivated: root.peekBegin()
     }
@@ -320,7 +331,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: cmdPeekEnd
         name: "cbw-cmd-peek-end"
-        text: "Come Back Window: Komut — Peek Bitir"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "cmd-peek-end")
         sequence: ""
         onActivated: root.peekEnd()
     }
@@ -328,7 +339,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: cmdPeekToggle
         name: "cbw-cmd-peek-toggle"
-        text: "Come Back Window: Komut — Peek Aç/Kapat"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "cmd-peek-toggle")
         sequence: ""
         onActivated: root.peekActive ? root.peekEnd() : root.peekBegin()
     }
@@ -336,7 +347,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: cmdMinimizeOthers
         name: "cbw-cmd-minimize-others"
-        text: "Come Back Window: Komut — Diğerlerini Küçült"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "cmd-minimize-others")
         sequence: ""
         onActivated: root.handleMinimizeOthers()
     }
@@ -344,7 +355,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: cmdRestoreAll
         name: "cbw-cmd-restore-all"
-        text: "Come Back Window: Komut — Hepsini Geri Getir"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "cmd-restore-all")
         sequence: ""
         onActivated: root.handleRestoreAll()
     }
@@ -352,7 +363,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: cmdSettingsChanged
         name: "cbw-cmd-settings-changed"
-        text: "Come Back Window: Komut — Ayarlar Değişti"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "cmd-settings-changed")
         sequence: ""
         onActivated: root.fetchSettings()
     }
@@ -360,7 +371,7 @@ Item {
     KWinApi.ShortcutHandler {
         id: cmdDumpState
         name: "cbw-cmd-dump-state"
-        text: "Come Back Window: Komut — Durum Dökümü"
+        text: "Come Back Window: " + Logic.tr(root.uiLanguage(), "cmd-dump-state")
         sequence: ""
         onActivated: root.reportState()
     }

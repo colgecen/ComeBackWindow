@@ -199,6 +199,16 @@ test("Küçültülmüş pencere dışarıdan geri gelince yığından düşer", 
     assert.deepStrictEqual(state.minimizedStack, []);
 });
 
+test("tr: kısayol adları dil ayarına göre çevrilir", () => {
+    assert.strictEqual(Logic.tr("tr", "show-desktop"), "Masaüstünü Göster");
+    assert.strictEqual(Logic.tr("en", "show-desktop"), "Show Desktop");
+    assert.strictEqual(Logic.tr("en", "minimize"), "Minimize Window");
+    assert.strictEqual(Logic.tr("auto", "show-desktop"), "Masaüstünü Göster");
+    assert.strictEqual(Logic.tr("fr", "show-desktop"), "Masaüstünü Göster");
+    assert.strictEqual(Logic.tr("en", "bilinmeyen"), "bilinmeyen");
+    assert.strictEqual(Logic.tr("en", "cmd-dump-state"), "Command — Dump State");
+});
+
 test("panelLayout: alt panel", () => {
     const ws = makeWorkspace({
         clientArea(option) {

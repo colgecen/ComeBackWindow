@@ -11,6 +11,7 @@
 #include "kwin_script.h"
 
 #include "dbus_service.h"
+#include "i18n.h"
 #include "version.h"
 
 #define KWIN_SERVICE "org.kde.KWin"
@@ -311,8 +312,8 @@ static void schedule_retry(App *app)
     if (!app->kwin_failed_notified) {
         app->kwin_failed_notified = TRUE;
         app_notify(app, "Come Back Window",
-                   "KWin betiği yüklenemedi; yeniden denenecek. "
-                   "Kısayollar şimdilik çalışmıyor.");
+                   _("KWin betiği yüklenemedi; yeniden denenecek. "
+                     "Kısayollar şimdilik çalışmıyor."));
     }
     app_log(app, "betik yükleme yeniden denemesi: %u sn", bridge->retry_delay);
     bridge->retry_id = g_timeout_add_seconds(bridge->retry_delay, retry_cb, app);

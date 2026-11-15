@@ -4,6 +4,7 @@
 #include "dialogs.h"
 
 #include "autostart.h"
+#include "i18n.h"
 #include "shortcuts.h"
 
 #pragma GCC diagnostic push
@@ -15,7 +16,7 @@
 
 static const gchar *language_codes[] = { "auto", "tr", "en" };
 static const gchar *language_names[] = {
-    "Otomatik (sistem)", "Türkçe", "English"
+    N_("Otomatik (sistem)"), N_("Türkçe"), N_("English")
 };
 
 typedef struct {
@@ -120,7 +121,10 @@ static GtkWidget *add_scale(GtkWidget *box, const gchar *text, gdouble value,
 
 static GtkWidget *add_language(GtkWidget *box, const gchar *current)
 {
-    GtkWidget *widget = gtk_drop_down_new_from_strings(language_names);
+    const gchar *names[] = {
+        _(language_names[0]), _(language_names[1]), _(language_names[2])
+    };
+    GtkWidget *widget = gtk_drop_down_new_from_strings(names);
     gint index = 0;
 
     for (gsize i = 0; i < G_N_ELEMENTS(language_codes); i++) {
@@ -129,7 +133,7 @@ static GtkWidget *add_language(GtkWidget *box, const gchar *current)
         }
     }
     gtk_drop_down_set_selected(GTK_DROP_DOWN(widget), (guint)index);
-    gtk_box_append(GTK_BOX(box), form_row("Arayüz dili", widget));
+    gtk_box_append(GTK_BOX(box), form_row(_("Arayüz dili"), widget));
     return widget;
 }
 
@@ -168,13 +172,13 @@ static GtkWidget *page_box(void)
 static GtkWidget *add_general_fields(GtkWidget *box, Form *form,
                                      const Settings *s)
 {
-    form->autostart = add_switch(box, "Oturum açılışında başlat",
+    form->autostart = add_switch(box, _("Oturum açılışında başlat"),
                                  s->autostart);
-    form->strip = add_switch(box, "Köşe şeridini göster",
+    form->strip = add_switch(box, _("Köşe şeridini göster"),
                              s->strip_enabled);
-    form->strip_width = add_spin(box, "Şerit genişliği (px)",
+    form->strip_width = add_spin(box, _("Şerit genişliği (px)"),
                                  s->strip_width, 2, 24, 1);
-    form->fallback_height = add_spin(box, "Panel yoksa yedek yükseklik",
+    form->fallback_height = add_spin(box, _("Panel yoksa yedek yükseklik"),
                                      s->fallback_height, 20, 120, 2);
     return box;
 }
@@ -183,12 +187,12 @@ static GtkWidget *add_effect_fields(GtkWidget *box, Form *form,
                                     const Settings *s)
 {
     form->peek = add_switch(box, "Aero Peek", s->peek_enabled);
-    form->peek_delay = add_spin(box, "Peek gecikmesi (ms)",
+    form->peek_delay = add_spin(box, _("Peek gecikmesi (ms)"),
                                 s->peek_delay_ms, 100, 2000, 50);
-    form->peek_opacity = add_scale(box, "Peek opaklığı", s->peek_opacity,
+    form->peek_opacity = add_scale(box, _("Peek opaklığı"), s->peek_opacity,
                                    0.0, 0.5, 0.01);
     form->shake = add_switch(box, "Aero Shake", s->shake_enabled);
-    form->tray = add_switch(box, "Tepsi simgesi", s->tray_enabled);
+    form->tray = add_switch(box, _("Tepsi simgesi"), s->tray_enabled);
     return box;
 }
 
@@ -254,9 +258,9 @@ static gboolean apply_settings(App *app, Settings *next, GtkWindow *parent)
     app->settings = *next;
     if (!app_save_settings(app, &error)) {
         app->settings = backup;
-        gchar *message = g_strdup_printf("Ayarlar kaydedilemedi: %s",
+        gchar *message = g_strdup_printf(_("Ayarlar kaydedilemedi: %s"),
                                          error != NULL ? error->message
-                                                       : "bilinmeyen hata");
+                                                       : _("bilinmeyen hata"));
 
         show_error(parent, message);
         g_free(message);
@@ -300,7 +304,7 @@ static void on_settings_shortcuts(GtkButton *button, gpointer user_data)
     (void)button;
     if (!shortcuts_open_editor(&error)) {
         show_error(GTK_WINDOW(dialog->window),
-                   error != NULL ? error->message : "Kısayollar açılamadı");
+                   error != NULL ? error->message : _("Kısayollar açılamadı"));
         g_clear_error(&error);
     }
 }
@@ -308,9 +312,9 @@ static void on_settings_shortcuts(GtkButton *button, gpointer user_data)
 static GtkWidget *dialog_buttons(SettingsDialog *dialog)
 {
     GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    GtkWidget *shortcuts = gtk_button_new_with_label("Kısayollar…");
-    GtkWidget *cancel = gtk_button_new_with_label("İptal");
-    GtkWidget *save = gtk_button_new_with_label("Kaydet");
+    GtkWidget *shortcuts = gtk_button_new_with_label(_("Kısayollar…"));
+    GtkWidget *cancel = gtk_button_new_with_label(_("İptal"));
+    GtkWidget *save = gtk_button_new_with_label(_("Kaydet"));
 
     gtk_widget_set_halign(row, GTK_ALIGN_END);
     gtk_widget_set_margin_top(row, 6);
@@ -333,10 +337,10 @@ static GtkWidget *build_settings_window(SettingsDialog *dialog)
     GtkWidget *box = page_box();
     GtkWidget *scroll = gtk_scrolled_window_new();
 
-    gtk_window_set_title(GTK_WINDOW(window), "Come Back Window — Ayarlar");
+    gtk_window_set_title(GTK_WINDOW(window), _("Come Back Window — Ayarlar"));
     gtk_window_set_default_size(GTK_WINDOW(window), 540, 640);
-    add_heading(box, "<b>Ayarlar</b>",
-                "Değişiklikler Kaydet'e basınca uygulanır.");
+    add_heading(box, _("<b>Ayarlar</b>"),
+                _("Değişiklikler Kaydet'e basınca uygulanır."));
     add_general_fields(box, &dialog->form, s);
     add_effect_fields(box, &dialog->form, s);
     dialog->form.language = add_language(box, s->language);
@@ -444,9 +448,9 @@ static GtkWidget *setup_language_page(SetupDialog *dialog)
 {
     GtkWidget *box = page_box();
 
-    add_heading(box, "<b>Hoş geldiniz</b>",
-                "Come Back Window, Windows tarzı pencere kısayollarını "
-                "KDE Plasma 6'ya taşır. Birkaç adımda ayarlayalım.");
+    add_heading(box, _("<b>Hoş geldiniz</b>"),
+                _("Come Back Window, Windows tarzı pencere kısayollarını "
+                  "KDE Plasma 6'ya taşır. Birkaç adımda ayarlayalım."));
     dialog->form.language = add_language(box, dialog->app->settings.language);
     return box;
 }
@@ -455,7 +459,7 @@ static GtkWidget *setup_general_page(SetupDialog *dialog)
 {
     GtkWidget *box = page_box();
 
-    add_heading(box, "<b>Başlangıç ve şerit</b>", NULL);
+    add_heading(box, _("<b>Başlangıç ve şerit</b>"), NULL);
     add_general_fields(box, &dialog->form, &dialog->app->settings);
     return box;
 }
@@ -464,8 +468,8 @@ static GtkWidget *setup_effects_page(SetupDialog *dialog)
 {
     GtkWidget *box = page_box();
 
-    add_heading(box, "<b>Efektler</b>",
-                "Bu ayarları daha sonra tepsi menüsünden değiştirebilirsiniz.");
+    add_heading(box, _("<b>Efektler</b>"),
+                _("Bu ayarları daha sonra tepsi menüsünden değiştirebilirsiniz."));
     add_effect_fields(box, &dialog->form, &dialog->app->settings);
     return box;
 }
@@ -474,9 +478,9 @@ static GtkWidget *setup_buttons(SetupDialog *dialog)
 {
     GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
 
-    dialog->back = gtk_button_new_with_label("Geri");
-    dialog->next = gtk_button_new_with_label("İleri");
-    dialog->finish = gtk_button_new_with_label("Başla");
+    dialog->back = gtk_button_new_with_label(_("Geri"));
+    dialog->next = gtk_button_new_with_label(_("İleri"));
+    dialog->finish = gtk_button_new_with_label(_("Başla"));
     gtk_widget_set_halign(row, GTK_ALIGN_END);
     gtk_box_append(GTK_BOX(row), dialog->back);
     gtk_box_append(GTK_BOX(row), dialog->next);
@@ -505,7 +509,7 @@ static GtkWidget *build_setup_window(SetupDialog *dialog)
                         setup_general_page(dialog), "general");
     gtk_stack_add_named(GTK_STACK(dialog->stack),
                         setup_effects_page(dialog), "effects");
-    gtk_window_set_title(GTK_WINDOW(window), "Come Back Window — İlk Açılış");
+    gtk_window_set_title(GTK_WINDOW(window), _("Come Back Window — İlk Açılış"));
     gtk_window_set_default_size(GTK_WINDOW(window), 560, 560);
     gtk_box_append(GTK_BOX(outer), dialog->stack);
     gtk_box_append(GTK_BOX(outer), setup_buttons(dialog));

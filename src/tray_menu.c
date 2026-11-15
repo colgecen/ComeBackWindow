@@ -8,6 +8,7 @@
 #include "tray_menu.h"
 
 #include "dialogs.h"
+#include "i18n.h"
 #include "version.h"
 
 #define MENU_PATH "/MenuBar"
@@ -25,17 +26,17 @@ enum {
 };
 
 static const MenuItemSpec items[] = {
-    { MENU_ID_DESKTOP, MENU_ITEM_NORMAL, "Masaüstünü Göster",
+    { MENU_ID_DESKTOP, MENU_ITEM_NORMAL, N_("Masaüstünü Göster"),
       "toggle-desktop" },
-    { MENU_ID_MINIMIZE_OTHERS, MENU_ITEM_NORMAL, "Diğerlerini Küçült",
+    { MENU_ID_MINIMIZE_OTHERS, MENU_ITEM_NORMAL, N_("Diğerlerini Küçült"),
       "minimize-others" },
-    { MENU_ID_RESTORE_ALL, MENU_ITEM_NORMAL, "Küçültülenleri Geri Getir",
+    { MENU_ID_RESTORE_ALL, MENU_ITEM_NORMAL, N_("Küçültülenleri Geri Getir"),
       "restore-all" },
     { MENU_ID_SEPARATOR, MENU_ITEM_SEPARATOR, NULL, NULL },
-    { MENU_ID_SETTINGS, MENU_ITEM_NORMAL, "Ayarlar…", "settings" },
-    { MENU_ID_SETUP, MENU_ITEM_NORMAL, "İlk Açılış Sihirbazı…", "setup" },
-    { MENU_ID_ABOUT, MENU_ITEM_NORMAL, "Hakkında…", "about" },
-    { MENU_ID_QUIT, MENU_ITEM_NORMAL, "Çıkış", "quit" }
+    { MENU_ID_SETTINGS, MENU_ITEM_NORMAL, N_("Ayarlar…"), "settings" },
+    { MENU_ID_SETUP, MENU_ITEM_NORMAL, N_("İlk Açılış Sihirbazı…"), "setup" },
+    { MENU_ID_ABOUT, MENU_ITEM_NORMAL, N_("Hakkında…"), "about" },
+    { MENU_ID_QUIT, MENU_ITEM_NORMAL, N_("Çıkış"), "quit" }
 };
 
 const MenuItemSpec *tray_menu_items(gsize *count)
@@ -67,7 +68,7 @@ static GVariant *item_properties(const MenuItemSpec *item)
     }
     g_variant_builder_add(&props, "{sv}", "label",
                           g_variant_new_string(item->label != NULL
-                                                   ? item->label : ""));
+                                                   ? _(item->label) : ""));
     g_variant_builder_add(&props, "{sv}", "enabled",
                           g_variant_new_boolean(TRUE));
     g_variant_builder_add(&props, "{sv}", "visible",
@@ -408,8 +409,11 @@ void tray_menu_activate(App *app, gint id)
         return;
     }
     if (g_strcmp0(action, "about") == 0) {
-        app_notify(app, "Come Back Window",
-                   "Sürüm " CBW_VERSION " — Windows tarzı pencere kısayolları");
+        gchar *body = g_strdup_printf(
+            _("Sürüm %s — Windows tarzı pencere kısayolları"), CBW_VERSION);
+
+        app_notify(app, "Come Back Window", body);
+        g_free(body);
         return;
     }
     if (g_strcmp0(action, "quit") == 0) {
