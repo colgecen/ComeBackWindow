@@ -7,6 +7,7 @@
  */
 #include "dbus_service.h"
 
+#include "dialogs.h"
 #include "layout.h"
 #include "strip.h"
 #include "version.h"
@@ -15,6 +16,7 @@ static const gchar introspection_xml[] =
     "<node>"
     "  <interface name='org.comebackwindow.App'>"
     "    <method name='Activate'/>"
+    "    <method name='OpenSetup'/>"
     "    <method name='ToggleDesktop'/>"
     "    <method name='MinimizeOthers'/>"
     "    <method name='RestoreAll'/>"
@@ -96,6 +98,17 @@ static void handle_report_layout(App *app, GVariant *parameters)
     app->last_layout_json = g_strdup(json);
     if (layout_apply(app, json)) {
         app_log(app, "düzen raporu alındı: %zu ekran", app->layout_len);
+        for (gsize i = 0; app->debug && i < app->layout_len; i++) {
+            const LayoutEntry *entry = &app->layout[i];
+
+            app_log(app, "  ekran %s: %dx%d+%d+%d kenar=%s kalınlık=%d "
+                    "ölçek=%.2f tam ekran=%s",
+                    entry->output != NULL ? entry->output : "?",
+                    entry->w, entry->h, entry->x, entry->y,
+                    entry->edge != NULL ? entry->edge : "?",
+                    entry->thickness, entry->scale,
+                    entry->fullscreen ? "evet" : "hayır");
+        }
         strip_update(app->strip);
     }
 }
@@ -178,7 +191,13 @@ static void method_call_cb(GDBusConnection *connection,
     (void)interface_name;
 
     if (g_strcmp0(method_name, "Activate") == 0) {
-        dispatch_client_command(app, invocation, "settings");
+        dialogs_open_settings(app);
+        g_dbus_method_invocation_return_value(invocation, NULL);
+        return;
+    }
+    if (g_strcmp0(method_name, "OpenSetup") == 0) {
+        dialogs_open_setup(app);
+        g_dbus_method_invocation_return_value(invocation, NULL);
         return;
     }
     if (g_strcmp0(method_name, "ToggleDesktop") == 0) {

@@ -47,6 +47,9 @@ static void begin_peek(Peek *peek)
     if (peek->active || !peek->app->settings.peek_enabled) {
         return;
     }
+    if (peek->app->desktop_shown) {
+        return;                 /* masaüstü zaten görünür: önizleme gereksiz */
+    }
     peek->active = TRUE;
     app_send_command(peek->app, "peek-begin");
     strip_set_peek_active(peek->app->strip, TRUE);
@@ -125,6 +128,20 @@ void peek_pointer_leave(Peek *peek)
     peek->hover = FALSE;
     cancel_delay(peek);
     send_peek_end(peek);
+}
+
+gboolean peek_click(Peek *peek)
+{
+    if (peek == NULL || !peek->fallback_active) {
+        return FALSE;
+    }
+    /* Yedek önizleme masaüstünü zaten gösterdi; tıklama onu onaylar. */
+    if (peek->fallback_id != 0) {
+        g_source_remove(peek->fallback_id);
+        peek->fallback_id = 0;
+    }
+    peek->fallback_active = FALSE;
+    return TRUE;
 }
 
 void peek_toggle(Peek *peek)

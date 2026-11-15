@@ -205,7 +205,10 @@ static void write_group(const Settings *s, GKeyFile *kf)
     g_key_file_set_integer(kf, GROUP, "fallback_height", s->fallback_height);
     g_key_file_set_boolean(kf, GROUP, "peek_enabled", s->peek_enabled);
     g_key_file_set_integer(kf, GROUP, "peek_delay_ms", s->peek_delay_ms);
-    g_key_file_set_double(kf, GROUP, "peek_opacity", s->peek_opacity);
+    gchar opacity[G_ASCII_DTOSTR_BUF_SIZE];
+
+    g_ascii_formatd(opacity, sizeof(opacity), "%.3f", s->peek_opacity);
+    g_key_file_set_string(kf, GROUP, "peek_opacity", opacity);
     g_key_file_set_boolean(kf, GROUP, "shake_enabled", s->shake_enabled);
     g_key_file_set_boolean(kf, GROUP, "tray_enabled", s->tray_enabled);
     g_key_file_set_string(kf, GROUP, "language", s->language != NULL ? s->language : "auto");

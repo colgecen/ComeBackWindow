@@ -45,8 +45,18 @@ gboolean strip_geometry_for(const LayoutEntry *entry, gint strip_width,
     if (edge == STRIP_EDGE_NONE) {
         edge = STRIP_EDGE_BOTTOM;
     }
-    return strip_geometry_calc(edge, entry->thickness, strip_width,
-                               entry->scale > 0 ? entry->scale : 1.0, out);
+    if (!strip_geometry_calc(edge, entry->thickness, strip_width,
+                             entry->scale > 0 ? entry->scale : 1.0, out)) {
+        return FALSE;
+    }
+    /*
+     * Panel varsa şerit panelin masaüstüne bakan yüzüne yerleşir; panelin
+     * üzerine binmez. Panel yoksa ("none") ekran köşesinde kalır.
+     */
+    if (strip_edge_from_string(entry->edge) != STRIP_EDGE_NONE) {
+        strip_set_panel_margin(edge, entry->thickness, out);
+    }
+    return TRUE;
 }
 
 gboolean strip_geometry_calc(StripEdge edge, gint thickness_in,
@@ -100,6 +110,31 @@ gboolean strip_geometry_calc(StripEdge edge, gint thickness_in,
         return FALSE;
     }
     return TRUE;
+}
+
+void strip_set_panel_margin(StripEdge edge, gint thickness, StripGeometry *geo)
+{
+    g_return_if_fail(geo != NULL);
+
+    gint value = thickness > 0 ? thickness : 44;
+
+    switch (edge) {
+    case STRIP_EDGE_BOTTOM:
+        geo->margin_bottom = value;
+        break;
+    case STRIP_EDGE_TOP:
+        geo->margin_top = value;
+        break;
+    case STRIP_EDGE_LEFT:
+        geo->margin_left = value;
+        break;
+    case STRIP_EDGE_RIGHT:
+        geo->margin_right = value;
+        break;
+    case STRIP_EDGE_NONE:
+    default:
+        break;
+    }
 }
 
 /* Masaüstüne bakan yön: sağdaki şerit sola, alttaki yukarı vb. */
@@ -213,6 +248,16 @@ void strip_notify_click(Strip *strip)
     }
     if (strip->callbacks.click != NULL) {
         strip->callbacks.click(strip, strip->callbacks_data);
+    }
+}
+
+void strip_notify_press(Strip *strip)
+{
+    if (strip == NULL) {
+        return;
+    }
+    if (strip->callbacks.press != NULL) {
+        strip->callbacks.press(strip, strip->callbacks_data);
     }
 }
 

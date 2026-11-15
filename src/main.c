@@ -7,6 +7,7 @@
 #include "app.h"
 #include "cli.h"
 #include "dbus_service.h"
+#include "dialogs.h"
 #include "kwin_script.h"
 #include "peek.h"
 #include "shortcuts.h"
@@ -172,6 +173,8 @@ static void name_lost_cb(GDBusConnection *connection,
 
     if (run->opts.mode == CBW_MODE_RUN) {
         run->forwarded = forward_call(run, "Activate");
+    } else if (run->opts.mode == CBW_MODE_SETUP) {
+        run->forwarded = forward_call(run, "OpenSetup");
     } else if (cli_mode_is_client(run->opts.mode)) {
         run->forwarded = run_client_command(run);
     } else {
@@ -249,13 +252,20 @@ static void strip_click_cb(Strip *strip, gpointer user_data)
     app_strip_click(user_data);
 }
 
+static void strip_press_cb(Strip *strip, gpointer user_data)
+{
+    (void)strip;
+    app_strip_press(user_data);
+}
+
 static void start_strip(Run *run)
 {
     App *app = &run->app;
     GError *error = NULL;
     StripCallbacks callbacks = {
         .hover = strip_hover_cb,
-        .click = strip_click_cb
+        .click = strip_click_cb,
+        .press = strip_press_cb
     };
 
     if (app->no_strip || !app->settings.strip_enabled) {
@@ -302,12 +312,18 @@ static gboolean startup_components(Run *run)
         run->app.no_strip = TRUE;
     }
     app_log(&run->app, "bileşenler başlatılıyor");
+    app_sync_autostart(&run->app);
     if (!kwin_script_init(&run->app)) {
         /* Betik henüz yüklenemedi; köprü kendi yeniden denemesini kurdu. */
         app_warn(&run->app, "KWin betiği şimdilik yüklenemedi");
     }
     start_strip(run);
     start_tray(run);
+    if (run->opts.mode == CBW_MODE_SETUP) {
+        dialogs_open_setup(&run->app);
+    } else {
+        dialogs_open_setup_if_needed(&run->app);
+    }
     return TRUE;
 }
 
@@ -369,6 +385,7 @@ int main(int argc, char **argv)
 
     g_main_loop_run(app->loop);
 
+    dialogs_shutdown(app);
     tray_destroy(app->tray);
     strip_destroy(app->strip);
     peek_destroy(app->peek);

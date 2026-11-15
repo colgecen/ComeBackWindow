@@ -67,6 +67,9 @@ struct _App {
     gboolean kwin_failed_notified;
     gboolean kwin_ready;
     gboolean desktop_shown;
+    /* Şerit tıklaması: basma anındaki masaüstü durumu ve gecikmeli işlem */
+    gboolean click_shown_at_press;
+    guint click_timeout;
 
     /* Kısayol çakışma yönetimi sonucu */
     gboolean native_show_desktop;
@@ -111,12 +114,16 @@ gchar **app_take_commands(App *app, gsize *count);
 /* Düzen girdilerini temizler. */
 void app_clear_layout(App *app);
 
+/* Autostart dosyasını ayarla eşitler. */
+void app_sync_autostart(App *app);
+
 /* Bildirim gösterir (freedesktop). */
 void app_notify(App *app, const gchar *title, const gchar *body);
 
 /* Şerit olayları. */
 void app_strip_hover(App *app, gboolean inside);
 void app_strip_click(App *app);
+void app_strip_press(App *app);
 
 /* Betikten gelen olayları ilgili bileşenlere dağıtır. */
 void app_handle_event(App *app, const gchar *name, const gchar *json);

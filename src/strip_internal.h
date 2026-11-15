@@ -21,6 +21,7 @@ struct _Strip {
 /* Arka uçlar tarafından ana döngüye olay iletmek için kullanılır. */
 void strip_notify_hover(Strip *strip, gboolean inside);
 void strip_notify_click(Strip *strip);
+void strip_notify_press(Strip *strip);
 
 /* Yaşam süresi: ana döngüye aktarılan olaylar bir referans tutar. */
 Strip *strip_ref(Strip *strip);

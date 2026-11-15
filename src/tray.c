@@ -7,6 +7,7 @@
  */
 #include "tray.h"
 
+#include "dialogs.h"
 #include "tray_menu.h"
 #include "version.h"
 
@@ -226,7 +227,7 @@ static void tray_method_call(GDBusConnection *connection, const gchar *sender,
     } else if (g_strcmp0(method_name, "ContextMenu") == 0) {
         g_dbus_method_invocation_return_value(invocation, NULL);
     } else if (g_strcmp0(method_name, "SecondaryActivate") == 0) {
-        app_send_command(tray->app, "settings");
+        dialogs_open_settings(tray->app);
         g_dbus_method_invocation_return_value(invocation, NULL);
     } else if (g_strcmp0(method_name, "Scroll") == 0) {
         app_send_command(tray->app, "toggle-desktop");

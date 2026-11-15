@@ -7,6 +7,7 @@
  */
 #include "tray_menu.h"
 
+#include "dialogs.h"
 #include "version.h"
 
 #define MENU_PATH "/MenuBar"
@@ -398,11 +399,12 @@ void tray_menu_activate(App *app, gint id)
     }
     if (g_strcmp0(action, "settings") == 0) {
         app->open_settings = TRUE;
-        app_send_command(app, "settings");
+        dialogs_open_settings(app);
         return;
     }
     if (g_strcmp0(action, "setup") == 0) {
         app->open_setup = TRUE;
+        dialogs_open_setup(app);
         return;
     }
     if (g_strcmp0(action, "about") == 0) {

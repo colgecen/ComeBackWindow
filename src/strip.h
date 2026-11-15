@@ -42,6 +42,8 @@ typedef struct _Strip Strip;
 typedef struct {
     void (*hover)(Strip *strip, gboolean inside, gpointer user_data);
     void (*click)(Strip *strip, gpointer user_data);
+    /* Düğmeye basıldı (bırakma olayı henüz gelmedi). */
+    void (*press)(Strip *strip, gpointer user_data);
 } StripCallbacks;
 
 /* "bottom", "top", "left", "right", "none" → StripEdge. */
@@ -51,6 +53,9 @@ StripEdge strip_edge_from_string(const gchar *edge);
  * Geçersiz girdide FALSE döner. */
 gboolean strip_geometry_for(const LayoutEntry *entry, gint strip_width,
                             StripGeometry *out);
+
+/* Panel varsa şeridin kenar boşluğunu panel kalınlığı kadar ayarlar. */
+void strip_set_panel_margin(StripEdge edge, gint thickness, StripGeometry *geo);
 
 /* Aynı hesabın açık parametreli biçimi. */
 gboolean strip_geometry_calc(StripEdge edge, gint thickness, gint strip_width,

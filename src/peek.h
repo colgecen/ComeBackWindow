@@ -25,6 +25,12 @@ void peek_on_event(Peek *peek, const gchar *name, const gchar *json);
 /* Peek açık mı? */
 gboolean peek_is_active(const Peek *peek);
 
+/*
+ * Şeride tıklandı. Yedek önizleme masaüstünü gösterdiyse tıklama onu
+ * onaylar ve TRUE döner; aksi halde FALSE döner ve çağıran aç/kapat yapar.
+ */
+gboolean peek_click(Peek *peek);
+
 /* Gecikme süresini ayarlardan yeniden okur. */
 void peek_reload_settings(Peek *peek);
 

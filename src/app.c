@@ -4,6 +4,7 @@
  */
 #include "app.h"
 
+#include "autostart.h"
 #include "dbus_service.h"
 #include "kwin_script.h"
 #include "peek.h"
@@ -22,8 +23,11 @@ void app_log(App *app, const gchar *format, ...)
     va_list args;
 
     va_start(args, format);
-    g_logv("comebackwindow", G_LOG_LEVEL_DEBUG, format, args);
+    gchar *message = g_strdup_vprintf(format, args);
+
     va_end(args);
+    g_printerr("%s: %s\n", CBW_PROGRAM_NAME, message);
+    g_free(message);
 }
 
 void app_warn(App *app, const gchar *format, ...)
@@ -32,8 +36,11 @@ void app_warn(App *app, const gchar *format, ...)
 
     (void)app;
     va_start(args, format);
-    g_logv("comebackwindow", G_LOG_LEVEL_WARNING, format, args);
+    gchar *message = g_strdup_vprintf(format, args);
+
     va_end(args);
+    g_printerr("%s: uyarı: %s\n", CBW_PROGRAM_NAME, message);
+    g_free(message);
 }
 
 gchar *app_data_dir(void)
@@ -108,6 +115,22 @@ void app_notify_settings(App *app)
     strip_refresh(app->strip);
 }
 
+void app_sync_autostart(App *app)
+{
+    GError *error = NULL;
+    gboolean enabled = autostart_is_enabled();
+    gboolean wanted = app->settings.autostart;
+
+    if (wanted == enabled) {
+        return;
+    }
+    if (!(wanted ? autostart_enable(&error) : autostart_disable(&error))) {
+        app_warn(app, "autostart güncellenemedi: %s",
+                 error != NULL ? error->message : "bilinmeyen hata");
+        g_clear_error(&error);
+    }
+}
+
 static void queue_command(App *app, const gchar *command)
 {
     g_mutex_lock(&app->commands_lock);
@@ -120,6 +143,7 @@ void app_send_command(App *app, const gchar *command)
     if (command == NULL || *command == '\0') {
         return;
     }
+    app_log(app, "komut gönderiliyor: %s", command);
     if (g_strcmp0(app->command_channel, "invoke") == 0
         && kwin_script_send_command(app, command)) {
         return;
@@ -211,10 +235,48 @@ void app_strip_hover(App *app, gboolean inside)
     }
 }
 
-void app_strip_click(App *app)
+void app_strip_press(App *app)
 {
+    if (app == NULL) {
+        return;
+    }
+    app->click_shown_at_press = app->desktop_shown;
+}
+
+/*
+ * Show Desktop açıkken şeride basmak KWin'in masaüstünü geri getirmesine yol
+ * açar. Bırakma anında hemen aç/kapat yaparsak masaüstü yeniden açılır ve
+ * tıklama hiçbir şey yapmamış gibi görünür. Bu yüzden kısa bir bekleme
+ * sonrası durum değişmediyse aç/kapat uygulanır.
+ */
+static gboolean strip_click_cb(gpointer data)
+{
+    App *app = data;
+
+    app->click_timeout = 0;
+    if (app->click_shown_at_press != app->desktop_shown) {
+        app_log(app, "şerit tıklaması: masaüstü durumu KWin tarafından "
+                "değiştirildi, ek işlem yok");
+        return G_SOURCE_REMOVE;
+    }
     app_log(app, "şeride tıklandı: masaüstü aç/kapat");
     app_send_command(app, "toggle-desktop");
+    return G_SOURCE_REMOVE;
+}
+
+void app_strip_click(App *app)
+{
+    if (app == NULL) {
+        return;
+    }
+    if (peek_click(app->peek)) {
+        app_log(app, "şeride tıklandı: peek onaylandı");
+        return;
+    }
+    if (app->click_timeout != 0) {
+        g_source_remove(app->click_timeout);
+    }
+    app->click_timeout = g_timeout_add(120, strip_click_cb, app);
 }
 
 void app_handle_event(App *app, const gchar *name, const gchar *json)

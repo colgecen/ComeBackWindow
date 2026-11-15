@@ -76,6 +76,7 @@ typedef struct {
     gboolean init_ok;
     gchar *init_error;
     struct wl_surface *pointer_surface;
+    gboolean button_pressed;
 } StripWayland;
 
 /* --- Olayları ana döngüye aktarma --------------------------------- */
@@ -100,6 +101,16 @@ static gboolean click_idle(gpointer data)
     return G_SOURCE_REMOVE;
 }
 
+static gboolean press_idle(gpointer data)
+{
+    Strip *strip = data;
+
+    if (!strip->destroyed) {
+        strip_notify_press(strip);
+    }
+    return G_SOURCE_REMOVE;
+}
+
 static void strip_destroy_notify(gpointer data)
 {
     strip_unref(data);
@@ -115,6 +126,12 @@ static void post_hover(Strip *strip, gboolean inside)
 static void post_click(Strip *strip)
 {
     g_main_context_invoke_full(NULL, G_PRIORITY_DEFAULT, click_idle,
+                               strip_ref(strip), strip_destroy_notify);
+}
+
+static void post_press(Strip *strip)
+{
+    g_main_context_invoke_full(NULL, G_PRIORITY_DEFAULT, press_idle,
                                strip_ref(strip), strip_destroy_notify);
 }
 
@@ -228,6 +245,8 @@ static const struct wl_output_listener output_listener = {
 
 /* --- wl_registry -------------------------------------------------- */
 
+static const struct wl_seat_listener seat_listener;
+
 static void registry_global(void *data, struct wl_registry *registry,
                             uint32_t name, const char *interface,
                             uint32_t version)
@@ -247,6 +266,8 @@ static void registry_global(void *data, struct wl_registry *registry,
     } else if (strcmp(interface, wl_seat_interface.name) == 0) {
         bw->seat = wl_registry_bind(registry, name, &wl_seat_interface,
                                     MIN(version, 7u));
+        /* capabilities olayı ilk turda gelir; dinleyici hemen eklenmeli. */
+        wl_seat_add_listener(bw->seat, &seat_listener, bw);
     } else if (strcmp(interface, wl_output_interface.name) == 0) {
         StripOutput *out = g_new0(StripOutput, 1);
 
@@ -289,6 +310,8 @@ static void pointer_enter(void *data, struct wl_pointer *pointer,
         ts->redraw = TRUE;
         post_hover(bw->strip, TRUE);
     }
+    app_log(bw->strip->app, "işaretçi şeride girdi (yüzey %s)",
+            ts != NULL ? "eşleşti" : "bulunamadı");
 }
 
 static void pointer_leave(void *data, struct wl_pointer *pointer,
@@ -300,6 +323,9 @@ static void pointer_leave(void *data, struct wl_pointer *pointer,
     (void)pointer;
     (void)serial;
     bw->pointer_surface = NULL;
+    bw->button_pressed = FALSE;
+    app_log(bw->strip->app, "işaretçi şeritten ayrıldı (yüzey %s)",
+            ts != NULL ? "eşleşti" : "bulunamadı");
     if (ts != NULL && ts->hover) {
         ts->hover = FALSE;
         ts->redraw = TRUE;
@@ -326,8 +352,24 @@ static void pointer_button(void *data, struct wl_pointer *pointer,
     (void)pointer;
     (void)serial;
     (void)time;
-    if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED
-        && bw->pointer_surface != NULL) {
+    if (button != BTN_LEFT) {
+        return;
+    }
+    if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
+        /*
+         * Tıklama bırakma anında işlenir: Show Desktop açıkken KWin gelen
+         * ilk düğme olayında masaüstünü geri getirir, bu yüzden açma
+         * işlemi basma olayından hemen sonra yapılmamalı.
+         */
+        bw->button_pressed = bw->pointer_surface != NULL;
+        if (bw->button_pressed) {
+            post_press(bw->strip);
+        }
+        return;
+    }
+    if (bw->button_pressed) {
+        bw->button_pressed = FALSE;
+        app_log(bw->strip->app, "şerit düğmesi bırakıldı");
         post_click(bw->strip);
     }
 }
@@ -395,7 +437,12 @@ static void seat_capabilities(void *data, struct wl_seat *seat,
         && bw->pointer == NULL) {
         bw->pointer = wl_seat_get_pointer(seat);
         wl_pointer_add_listener(bw->pointer, &pointer_listener, bw);
+        app_log(bw->strip->app, "işaretçi alındı (yetki 0x%x)",
+                (guint)capabilities);
+        return;
     }
+    app_log(bw->strip->app, "seat yetkileri: 0x%x (işaretçi %s)",
+            (guint)capabilities, bw->pointer != NULL ? "var" : "yok");
 }
 
 static void seat_name(void *data, struct wl_seat *seat, const char *name)
@@ -593,6 +640,9 @@ static StripSurface *surface_create(StripWayland *bw, const StripSpec *spec,
         g_free(ts);
         return NULL;
     }
+    if (spec->edge != STRIP_EDGE_NONE) {
+        strip_set_panel_margin(spec->edge, spec->thickness, &ts->geo);
+    }
     ts->output = find_output(bw, spec->output);
     ts->surface = wl_compositor_create_surface(bw->compositor);
     if (ts->surface == NULL) {
@@ -602,6 +652,11 @@ static StripSurface *surface_create(StripWayland *bw, const StripSpec *spec,
     ts->layer = zwlr_layer_shell_v1_get_layer_surface(
         bw->layer_shell, ts->surface, ts->output,
         ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY, "comebackwindow-strip");
+    app_log(bw->strip->app,
+            "şerit yüzeyi: %s %dx%d çapa=0x%x kenar=%d",
+            spec->output != NULL ? spec->output : "(varsayılan)",
+            ts->geo.width, ts->geo.height, (guint)ts->geo.anchor,
+            (gint)ts->geo.edge);
     if (ts->layer == NULL) {
         wl_surface_destroy(ts->surface);
         g_free(ts);
@@ -702,6 +757,10 @@ static void apply_specs(StripWayland *bw)
     gint strip_width = bw->strip->app->settings.strip_width > 0
         ? bw->strip->app->settings.strip_width : 6;
 
+    app_log(bw->strip->app, "şerit düzeni: %u spec, %u yüzey, işaretçi %s",
+            bw->specs->len, bw->surfaces->len,
+            bw->pointer != NULL ? "var" : "yok");
+
     for (guint i = 0; i < specs->len; i++) {
         StripSpec *spec = g_ptr_array_index(specs, i);
         StripSurface *reuse = NULL;
@@ -721,6 +780,9 @@ static void apply_specs(StripWayland *bw)
         }
         if (reuse == NULL) {
             reuse = surface_create(bw, spec, strip_width);
+            app_log(bw->strip->app, "şerit yüzeyi oluşturuldu");
+        } else {
+            app_log(bw->strip->app, "şerit yüzeyi yeniden kullanıldı");
         }
         if (reuse != NULL) {
             reuse->redraw = TRUE;
@@ -763,9 +825,6 @@ static gboolean connect_backend(StripWayland *bw)
         bw->init_error =
             g_strdup("zwlr_layer_shell_v1 bulunamadı (KWin sürümü?)");
         return FALSE;
-    }
-    if (bw->seat != NULL) {
-        wl_seat_add_listener(bw->seat, &seat_listener, bw);
     }
     return TRUE;
 }
