@@ -155,6 +155,7 @@ static void test_corrupt_file(void)
     /* Bozuk dosya varsayılanlarla birlikte okunur. */
     settings_load(&s, &error);
     CHECK_INT_EQ(s.strip_width, 6);
+    g_clear_error(&error);
     settings_clear(&s);
 }
 

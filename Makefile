@@ -182,6 +182,17 @@ test-unit: all
 test-asan: clean
 	@$(MAKE) test-unit OPT="$(SANITIZE) -O1" 
 
+# Valgrind varsa birim testlerini bellek denetiminden geçirir; yoksa SKIP.
+test-valgrind: test-unit
+	@if ! command -v valgrind >/dev/null; then \
+	  echo "SKIP test-valgrind (valgrind kurulu değil)"; exit 0; fi; \
+	set -e; for t in $(TESTS_BIN); do \
+	  echo "== valgrind $$(basename $$t)"; \
+	  valgrind --quiet --error-exitcode=1 --leak-check=full \
+	    --errors-for-leak-kinds=definite,indirect $$t >/dev/null; \
+	done; \
+	echo "test-valgrind: TÜMÜ TEMİZ"
+
 test-js:
 	@if command -v node >/dev/null; then node --test tests/js/*.test.js; \
 	else echo "SKIP test-js (node yok)"; fi
