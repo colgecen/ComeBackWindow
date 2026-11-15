@@ -27,7 +27,7 @@ dosyasına yazın.
 |---|---|---|
 | 2.1 | Sağ alt köşedeki ince şeride tıkla | Masaüstü açılır (`showingDesktop=true`) |
 | 2.2 | Tekrar tıkla | Masaüstü geri gelir (`showingDesktop=false`) |
-| 2.3 | Panele bak | Şerit panelin üstünde, paneli kapatmıyor |
+| 2.3 | Panele bak | Şerit ekranın tam sağ alt köşesinde, panelin en ucunda |
 | 2.4 | `busctl --user get-property org.kde.KWin /KWin org.kde.KWin showingDesktop` | Tıklama sonrası değer değişir |
 | 2.5 | Tam ekran pencere açıkken | Şerit gizlenir |
 
