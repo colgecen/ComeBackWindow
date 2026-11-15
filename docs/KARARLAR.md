@@ -81,3 +81,9 @@ Ek doğrulamalar:
   günlüğe yazıp temiz biçimde çıkar (oturum açılışında yeniden başlar).
   KWin betiği yüklenemezse üstel geri çekilmeyle (1→60 sn) yeniden denenir
   ve kullanıcı bir kez bilgilendirilir.
+- **2026-11-15 — Şerit konumu:** Şerit panelin üstüne değil, ekranın sağ alt
+  köşesine yapışır ve panel kalınlığı kadar yükseklikte panelin son
+  dilimini kaplar (Windows'taki "Masaüstünü Göster" düğmesi gibi). Panel
+  marjini kaldırıldı; şerit her zaman görünür kenara sıfır boşlukla oturur.
+  Görünürlük için koyu yarı saydam zemin + masaüstüne bakan turuncu çizgi
+  kullanılır; 6 px genişlikte ok çizilmez.

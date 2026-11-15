@@ -50,12 +50,10 @@ gboolean strip_geometry_for(const LayoutEntry *entry, gint strip_width,
         return FALSE;
     }
     /*
-     * Panel varsa şerit panelin masaüstüne bakan yüzüne yerleşir; panelin
-     * üzerine binmez. Panel yoksa ("none") ekran köşesinde kalır.
+     * Şerit her zaman ekranın köşesine yapışır: panel varsa kalınlığı panel
+     * kalınlığıdır ve panelin en ucundaki dilimi kaplar (Windows'taki
+     * "Masaüstünü Göster" düğmesi gibi).
      */
-    if (strip_edge_from_string(entry->edge) != STRIP_EDGE_NONE) {
-        strip_set_panel_margin(edge, entry->thickness, out);
-    }
     return TRUE;
 }
 
@@ -112,30 +110,6 @@ gboolean strip_geometry_calc(StripEdge edge, gint thickness_in,
     return TRUE;
 }
 
-void strip_set_panel_margin(StripEdge edge, gint thickness, StripGeometry *geo)
-{
-    g_return_if_fail(geo != NULL);
-
-    gint value = thickness > 0 ? thickness : 44;
-
-    switch (edge) {
-    case STRIP_EDGE_BOTTOM:
-        geo->margin_bottom = value;
-        break;
-    case STRIP_EDGE_TOP:
-        geo->margin_top = value;
-        break;
-    case STRIP_EDGE_LEFT:
-        geo->margin_left = value;
-        break;
-    case STRIP_EDGE_RIGHT:
-        geo->margin_right = value;
-        break;
-    case STRIP_EDGE_NONE:
-    default:
-        break;
-    }
-}
 
 /* Masaüstüne bakan yön: sağdaki şerit sola, alttaki yukarı vb. */
 static gdouble arrow_direction(StripEdge edge)
@@ -160,57 +134,53 @@ void strip_draw(cairo_t *cr, gint width, gint height, StripEdge edge,
     if (cr == NULL || width <= 0 || height <= 0) {
         return;
     }
-    gdouble alpha = 0.45;
+    gboolean vertical = width < height;
+    gdouble tint = peek_active ? 0.40 : (hover ? 0.28 : 0.0);
 
-    if (hover) {
-        alpha = 0.75;
-    }
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
     cairo_set_source_rgba(cr, 0, 0, 0, 0);
     cairo_paint(cr);
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-    /* Arka plan */
-    cairo_set_source_rgba(cr, 0.10, 0.10, 0.12, alpha);
+    /* Arka plan: panel üzerinde de görünür yarı saydam koyu şerit. */
+    cairo_set_source_rgba(cr, 0.07, 0.07, 0.09, hover ? 0.60 : 0.78);
     cairo_rectangle(cr, 0, 0, width, height);
     cairo_fill(cr);
 
-    /* Masaüstüne bakan ince turuncu çizgi */
-    cairo_set_source_rgba(cr, 0.91, 0.35, 0.09, peek_active ? 1.0 : 0.8);
-    cairo_set_line_width(cr, 1.5);
-    switch (edge) {
-    case STRIP_EDGE_LEFT:
-        cairo_move_to(cr, width - 0.75, 0);
-        cairo_line_to(cr, width - 0.75, height);
-        break;
-    case STRIP_EDGE_RIGHT:
-        cairo_move_to(cr, 0.75, 0);
-        cairo_line_to(cr, 0.75, height);
-        break;
-    case STRIP_EDGE_TOP:
-        cairo_move_to(cr, 0, height - 0.75);
-        cairo_line_to(cr, width, height - 0.75);
-        break;
-    default:
-        cairo_move_to(cr, 0, 0.75);
-        cairo_line_to(cr, width, 0.75);
-        break;
+    /* Masaüstüne bakan iç kenarda turuncu çizgi. */
+    cairo_set_source_rgba(cr, 0.96, 0.52, 0.15,
+                          (hover || peek_active) ? 1.0 : 0.85);
+    cairo_set_line_width(cr, 2.0);
+    if (vertical) {
+        cairo_move_to(cr, 1.0, 1.0);
+        cairo_line_to(cr, 1.0, height - 1.0);
+    } else {
+        cairo_move_to(cr, 1.0, 1.0);
+        cairo_line_to(cr, width - 1.0, 1.0);
     }
     cairo_stroke(cr);
 
-    /* Ok (chevron) */
-    gdouble cx = width / 2.0;
-    gdouble cy = height / 2.0;
+    /* Peek/hover sırasında turuncu dolgu. */
+    if (tint > 0.0) {
+        cairo_set_source_rgba(cr, 0.96, 0.52, 0.15, tint);
+        cairo_rectangle(cr, 0, 0, width, height);
+        cairo_fill(cr);
+    }
+
+    /*
+     * Ok işareti yalnızca şerit yeterince kalınsa çizilir; varsayılan 6 px
+     * genişlikte ok okunaksız olur, turuncu çizgi yeterli yön ipucu verir.
+     */
     gdouble size = fmin(width, height) * 0.34;
 
-    if (size < 2.0) {
+    if (size < 4.0) {
         return;
     }
     cairo_save(cr);
-    cairo_translate(cr, cx, cy);
+    cairo_translate(cr, width / 2.0, height / 2.0);
     cairo_rotate(cr, arrow_direction(edge));
-    cairo_set_source_rgba(cr, 0.95, 0.47, 0.15, peek_active ? 1.0 : 0.9);
-    cairo_set_line_width(cr, fmax(1.4, size * 0.28));
+    cairo_set_source_rgba(cr, 1.0, 0.62, 0.25, 1.0);
+    cairo_set_line_width(cr, fmax(1.6, size * 0.30));
     cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
     cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
     cairo_move_to(cr, -size / 2.0, -size / 2.0);

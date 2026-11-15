@@ -640,9 +640,6 @@ static StripSurface *surface_create(StripWayland *bw, const StripSpec *spec,
         g_free(ts);
         return NULL;
     }
-    if (spec->edge != STRIP_EDGE_NONE) {
-        strip_set_panel_margin(spec->edge, spec->thickness, &ts->geo);
-    }
     ts->output = find_output(bw, spec->output);
     ts->surface = wl_compositor_create_surface(bw->compositor);
     if (ts->surface == NULL) {

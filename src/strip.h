@@ -54,9 +54,6 @@ StripEdge strip_edge_from_string(const gchar *edge);
 gboolean strip_geometry_for(const LayoutEntry *entry, gint strip_width,
                             StripGeometry *out);
 
-/* Panel varsa şeridin kenar boşluğunu panel kalınlığı kadar ayarlar. */
-void strip_set_panel_margin(StripEdge edge, gint thickness, StripGeometry *geo);
-
 /* Aynı hesabın açık parametreli biçimi. */
 gboolean strip_geometry_calc(StripEdge edge, gint thickness, gint strip_width,
                              gdouble scale, StripGeometry *out);
