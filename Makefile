@@ -195,8 +195,12 @@ test-unit: all
 	  echo "== $$name"; $(TESTBIN)/$$name; \
 	done
 
+# ASan/UBSan birim testleri. Sonrasında normal derleme geri yüklenir;
+# aksi hâlde `comebackwindow` ikilisi libasan'a bağlı kalır.
 test-asan: clean
-	@$(MAKE) test-unit OPT="$(SANITIZE) -O1" 
+	@$(MAKE) test-unit OPT="$(SANITIZE) -O1"
+	@$(MAKE) clean
+	@$(MAKE) all
 
 # Valgrind varsa birim testlerini bellek denetiminden geçirir; yoksa SKIP.
 test-valgrind: test-unit
