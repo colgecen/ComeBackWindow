@@ -135,6 +135,19 @@ static gboolean run_client_command(Run *run)
     return forward_call(run, method);
 }
 
+static void on_bus_closed(GDBusConnection *connection,
+                          gboolean remote_peer_vanished, GError *error,
+                          gpointer user_data)
+{
+    Run *run = user_data;
+
+    (void)connection;
+    (void)remote_peer_vanished;
+    app_warn(&run->app, "D-Bus bağlantısı kapandı (%s); uygulama kapanıyor",
+             error != NULL ? error->message : "bilinmeyen neden");
+    g_main_loop_quit(run->app.loop);
+}
+
 static void bus_acquired_cb(GDBusConnection *connection,
                             const gchar *name,
                             gpointer user_data)
@@ -144,6 +157,8 @@ static void bus_acquired_cb(GDBusConnection *connection,
 
     (void)name;
     app_log(&run->app, "D-Bus bağlantısı kuruldu");
+    g_dbus_connection_set_exit_on_close(connection, FALSE);
+    g_signal_connect(connection, "closed", G_CALLBACK(on_bus_closed), run);
 
     if (!dbus_service_register(&run->app, connection, &error)) {
         g_printerr("comebackwindow: D-Bus nesnesi kaydedilemedi: %s\n",

@@ -75,3 +75,9 @@ Ek doğrulamalar:
   gettext kataloğunu yükleyemediği için kısayol adları `logic.js` içindeki
   küçük bir sözlükten (`STRINGS`) seçilir; `tr()` bilinmeyen anahtarda
   Türkçeye düşer, `auto` dilde sistem yereli `Qt.locale()` ile çözülür.
+- **2026-11-15 — Dayanıklılık:** Okunamayan ayar dosyası silinmez;
+  `config.ini.bozuk-<zaman>` adına taşınır ve uygulama varsayılanlarla
+  açılır. Oturum D-Bus bağlantısı kapanırsa uygulama yarı ölü kalmak yerine
+  günlüğe yazıp temiz biçimde çıkar (oturum açılışında yeniden başlar).
+  KWin betiği yüklenemezse üstel geri çekilmeyle (1→60 sn) yeniden denenir
+  ve kullanıcı bir kez bilgilendirilir.

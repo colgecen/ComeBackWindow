@@ -4,6 +4,7 @@
 
 #include <glib/gstdio.h>
 #include <locale.h>
+#include <unistd.h>
 
 static gchar *tmpdir = NULL;
 
@@ -21,9 +22,18 @@ static void teardown(void)
     if (tmpdir == NULL) {
         return;
     }
-    gchar *path = config_path();
-    g_unlink(path);
-    g_free(path);
+    GDir *dir = g_dir_open(tmpdir, 0, NULL);
+
+    if (dir != NULL) {
+        const gchar *name = NULL;
+
+        while ((name = g_dir_read_name(dir)) != NULL) {
+            gchar *full = g_build_filename(tmpdir, name, NULL);
+            g_unlink(full);
+            g_free(full);
+        }
+        g_dir_close(dir);
+    }
     g_rmdir(tmpdir);
     g_free(tmpdir);
     g_unsetenv("CBW_CONFIG_DIR");
@@ -148,6 +158,32 @@ static void test_corrupt_file(void)
     settings_clear(&s);
 }
 
+/* Okunamayan dosya yedeklenir ve varsayılanlarla devam edilir. */
+static void test_corrupt_backup(void)
+{
+    if (geteuid() == 0) {
+        return; /* root izinlere takılmaz */
+    }
+    gchar *path = config_path();
+    Settings s;
+    GError *error = NULL;
+
+    g_assert_true(g_file_set_contents(path, "[comebackwindow]\nstrip_width=6\n",
+                                      -1, NULL));
+    g_assert_cmpint(g_chmod(path, 0000), ==, 0);
+    settings_init_defaults(&s);
+    CHECK(settings_load(&s, &error) == FALSE);
+    g_clear_error(&error);
+    CHECK(settings_backup_corrupt(&error) == TRUE);
+    g_clear_error(&error);
+    CHECK(config_exists() == FALSE);
+    CHECK(settings_load(&s, &error) == TRUE); /* dosya yok: varsayılan */
+    CHECK_INT_EQ(s.strip_width, 6);
+    g_clear_error(&error);
+    settings_clear(&s);
+    g_free(path);
+}
+
 static void test_partial_file(void)
 {
     Settings s;
@@ -226,6 +262,7 @@ int main(void)
     test_missing_file();
     test_roundtrip();
     test_corrupt_file();
+    test_corrupt_backup();
     test_partial_file();
     test_json();
     test_json_locale();

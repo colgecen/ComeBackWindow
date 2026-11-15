@@ -65,7 +65,23 @@ gchar *app_kwin_script_path(void)
 gboolean app_load_settings(App *app, GError **error)
 {
     if (!settings_load(&app->settings, error)) {
-        return FALSE;
+        gchar *reason = g_strdup((error != NULL && *error != NULL)
+                                 ? (*error)->message : "bilinmeyen hata");
+        GError *backup_error = NULL;
+
+        /* Bozuk dosya yedeklenir; uygulama varsayılanlarla açılır. */
+        if (settings_backup_corrupt(&backup_error)) {
+            app_warn(app, "ayarlar okunamadı (%s); bozuk dosya yedeklendi, "
+                     "varsayılanlar kullanılıyor", reason);
+        } else {
+            app_warn(app, "ayarlar okunamadı (%s); varsayılanlarla devam "
+                     "ediliyor", reason);
+        }
+        g_clear_error(error);
+        g_clear_error(&backup_error);
+        g_free(reason);
+        settings_clear(&app->settings);
+        settings_init_defaults(&app->settings);
     }
 #ifdef CBW_DEV_DEFAULTS
     /* Geliştirme kolaylığı: ilk açılış penceresi atlanır. */

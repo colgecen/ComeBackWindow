@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <gio/gio.h>
+#include <glib/gstdio.h>
 #include <string.h>
 
 #define CONFIG_SUBDIR "comebackwindow"
@@ -90,6 +91,31 @@ gboolean config_exists(void)
 
     g_free(path);
     return exists;
+}
+
+/*
+ * Okunamayan ayar dosyasını zaman damgalı bir ada taşır; uygulama varsayılan
+ * ayarlarla devam edebilir ve kullanıcı eski dosyayı elle inceleyebilir.
+ */
+gboolean settings_backup_corrupt(GError **error)
+{
+    gchar *path = config_path();
+
+    if (!g_file_test(path, G_FILE_TEST_EXISTS)) {
+        g_free(path);
+        return FALSE;
+    }
+    gchar *target = g_strdup_printf("%s.bozuk-%" G_GINT64_FORMAT, path,
+                                    g_get_real_time());
+    gboolean ok = g_rename(path, target) == 0;
+
+    if (!ok) {
+        g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(errno),
+                    "bozuk ayar dosyası yedeklenemedi: %s", g_strerror(errno));
+    }
+    g_free(target);
+    g_free(path);
+    return ok;
 }
 
 void settings_clamp(Settings *s)

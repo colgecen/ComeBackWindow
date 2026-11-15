@@ -40,6 +40,12 @@ gchar *config_dir(void);
 /* Dosya var mı? */
 gboolean config_exists(void);
 
+/*
+ * Okunamayan ayar dosyasını `<dosya>.bozuk-<zaman>` adına taşır.
+ * Dosya yoksa FALSE döner; taşıma başarısızsa hata doldurulur.
+ */
+gboolean settings_backup_corrupt(GError **error);
+
 /* Dosyayı okur. Dosya yoksa varsayılanlar kalır ve TRUE döner. */
 gboolean settings_load(Settings *s, GError **error);
 
