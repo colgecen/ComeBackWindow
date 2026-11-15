@@ -206,13 +206,26 @@ static void draw_text_strip(cairo_t *cr, gint width, gint height,
         || style->text_opacity <= 0.0) {
         return;
     }
-    gint font = MAX(6, (gint)floor(width * 0.85));
-    gdouble max_len = height - 6.0;
-
-    text_font_px(cr, font);
+    /*
+     * Yazıyı bozmadan sığdır: fontu, hem şerit genişliğine (dikey kalınlık)
+     * hem de uzunluğa sığan en büyük boya kadar küçült. Böylece harfler ne
+     * kenardan kesilir ne de yatay sıkıştırılıp bozulur.
+     */
+    gdouble max_len = height - 8.0;
+    gdouble max_thick = width - 1.0;
+    gint font = MAX(5, (gint)floor(width * 0.85));
     cairo_text_extents_t extents;
 
-    cairo_text_extents(cr, style->text, &extents);
+    /* Font yalnızca şerit kalınlığına sığacak kadar küçültülür. */
+    for (;;) {
+        text_font_px(cr, font);
+        cairo_text_extents(cr, style->text, &extents);
+        if (extents.height <= max_thick || font <= 5) {
+            break;
+        }
+        font--;
+    }
+    /* Uzun metin kenarlardan taşmasın diye yalnız gerekirse sıkıştırılır. */
     gdouble fit = 1.0;
 
     if (extents.x_advance > max_len && extents.x_advance > 0) {

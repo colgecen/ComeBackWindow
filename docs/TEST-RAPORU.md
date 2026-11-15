@@ -61,7 +61,7 @@
 | 2.8 | Yazıya tıkla | PASS | `showingDesktop` iki yönde değişti |
 | 2.9 | Şerit rengi/opaklığı | PASS | Kırmızı + %50 opaklık canlı denendi |
 | 2.10 | Yazı rengi/opaklığı | PASS | Sarı yazı canlı denendi |
-| 2.11 | Uzun metin tam sığar | PASS | "Masaüstünü Göster" kırpılmadan sığdı |
+| 2.11 | Uzun metin tam sığar | PASS | "Masaüstünü Göster" 1911–1918 × 1014–1074 (şerit 1910–1919 × 1012–1079) |
 | 3.1 | Meta+D | PASS | KDE yerel kısayolu çalışıyor |
 | 3.5 | Meta+Home (diğerlerini küçült) | PASS | Küçültülen yığını doldu |
 | 3.6 | Meta+Shift+M (geri getir) | PASS | Yığın boşaldı |
