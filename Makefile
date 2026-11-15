@@ -268,7 +268,8 @@ uninstall:
 
 dist:
 	@ver=$$(sed -n 's/^#define CBW_VERSION "\(.*\)"/\1/p' src/version.h 2>/dev/null || echo 1.0.0); \
-	tar --exclude-vcs --exclude=build --exclude='assets/comebackwindow-*.png' --exclude='*.mo' \
+	tar --exclude-vcs --exclude=build --exclude='*.tar.gz' \
+	    --exclude='assets/comebackwindow-*.png' --exclude='*.mo' \
 	    --transform "s,^\.,comebackwindow-$$ver," -czf comebackwindow-$$ver.tar.gz .
 
 clean:

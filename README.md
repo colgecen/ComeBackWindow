@@ -78,7 +78,9 @@ make test-integration   # gerçek KWin oturumunda uçtan uca
 tools/check-all.sh      # hepsini sırayla çalıştırır
 ```
 
-Manuel test listesi: `docs/MANUEL-TEST.md`. Test raporu: `docs/TEST-RAPORU.md`.
+Manuel test listesi: `docs/MANUEL-TEST.md`. Test raporu:
+`docs/TEST-RAPORU.md`. Kabul listesi: `docs/KABUL-TESTLERI.md`.
+Sürüm notları: `CHANGELOG.md`.
 
 ## Lisans
 
