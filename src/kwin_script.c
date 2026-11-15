@@ -69,6 +69,28 @@ static gboolean unload_script(App *app)
                           g_variant_new("(s)", PLUGIN_NAME));
 }
 
+static gboolean is_loaded(App *app);
+
+/*
+ * KWin betiği kaldırmayı geciktirir; yeni betiği hemen yüklersek eski örnek
+ * çalışmaya devam eder ve olay işleyicileri iki kez bağlanır.
+ */
+static gboolean unload_script_wait(App *app)
+{
+    gint64 deadline = g_get_monotonic_time() + 3 * G_TIME_SPAN_SECOND;
+
+    unload_script(app);
+    while (is_loaded(app)) {
+        if (g_get_monotonic_time() > deadline) {
+            return FALSE;
+        }
+        g_usleep(50 * 1000);
+    }
+    /* KWin betiği işaretledikten sonra örneği biraz sonra yok eder. */
+    g_usleep(250 * 1000);
+    return TRUE;
+}
+
 static gint load_declarative(App *app, const gchar *path)
 {
     GError *error = NULL;
@@ -138,6 +160,84 @@ static void on_script_loaded(App *app)
     app_on_kwin_ready(app);
 }
 
+/*
+ * KWin, QML bileşenlerini dosya yoluna göre bellekte önbelleğe alır. Aynı
+ * yoldan yeniden yükleme eski kodu çalıştırmaya devam eder; bu yüzden betik
+ * her içerik sürümü için ayrı bir dizine kopyalanır ve oradan yüklenir.
+ */
+static gboolean copy_file(const gchar *from, const gchar *to)
+{
+    gchar *data = NULL;
+    gsize len = 0;
+
+    if (!g_file_get_contents(from, &data, &len, NULL)) {
+        return FALSE;
+    }
+    gboolean ok = g_file_set_contents(to, data, (gssize)len, NULL);
+
+    g_free(data);
+    return ok;
+}
+
+static gchar *stage_script(App *app)
+{
+    gchar *root = app_data_dir();
+    gchar *src_ui = g_build_filename(root, "kwin", "contents", "ui",
+                                     "main.qml", NULL);
+    gchar *src_js = g_build_filename(root, "kwin", "contents", "code",
+                                     "logic.js", NULL);
+    gchar *ui_data = NULL;
+    gchar *js_data = NULL;
+    gsize ui_len = 0;
+    gsize js_len = 0;
+
+    g_free(root);
+    if (!g_file_get_contents(src_ui, &ui_data, &ui_len, NULL)
+        || !g_file_get_contents(src_js, &js_data, &js_len, NULL)) {
+        app_warn(app, "KWin betiği kaynakları okunamadı: %s", src_ui);
+        g_free(src_ui);
+        g_free(src_js);
+        g_free(ui_data);
+        g_free(js_data);
+        return NULL;
+    }
+    gchar *joined = g_strconcat(ui_data, js_data, NULL);
+    gchar *hash = g_compute_checksum_for_string(G_CHECKSUM_SHA256, joined,
+                                                (gssize)(ui_len + js_len));
+
+    g_free(joined);
+    g_free(ui_data);
+    g_free(js_data);
+    gchar *base = g_build_filename(g_get_user_cache_dir(), "comebackwindow",
+                                   NULL);
+    gchar *dir_name = g_strdup_printf("kwin-%s", hash);
+    gchar *dest = g_build_filename(base, dir_name, "contents", NULL);
+    gchar *dest_ui_dir = g_build_filename(dest, "ui", NULL);
+    gchar *dest_js_dir = g_build_filename(dest, "code", NULL);
+    gchar *dest_ui = g_build_filename(dest_ui_dir, "main.qml", NULL);
+    gchar *dest_js = g_build_filename(dest_js_dir, "logic.js", NULL);
+
+    g_free(hash);
+    g_free(dir_name);
+    g_free(base);
+    gboolean ok = g_mkdir_with_parents(dest_ui_dir, 0755) == 0
+        && g_mkdir_with_parents(dest_js_dir, 0755) == 0
+        && copy_file(src_ui, dest_ui) && copy_file(src_js, dest_js);
+
+    g_free(src_ui);
+    g_free(src_js);
+    g_free(dest);
+    g_free(dest_ui_dir);
+    g_free(dest_js_dir);
+    g_free(dest_js);
+    if (!ok) {
+        app_warn(app, "KWin betiği önbelleğe kopyalanamadı");
+        g_free(dest_ui);
+        return NULL;
+    }
+    return dest_ui;
+}
+
 gboolean kwin_script_reload(App *app)
 {
     KwinBridge *bridge = app->kwin;
@@ -146,12 +246,15 @@ gboolean kwin_script_reload(App *app)
         return FALSE;
     }
     bridge->loaded = FALSE;
-    unload_script(app);
+    if (!unload_script_wait(app)) {
+        app_warn(app,
+                 "önceki KWin betiği kaldırılamadı; yüklü betik korunuyor");
+        on_script_loaded(app);
+        return TRUE;
+    }
 
-    gchar *path = app_kwin_script_path();
-    if (!g_file_test(path, G_FILE_TEST_IS_REGULAR)) {
-        app_warn(app, "KWin betiği bulunamadı: %s", path);
-        g_free(path);
+    gchar *path = stage_script(app);
+    if (path == NULL) {
         schedule_retry(app);
         return FALSE;
     }

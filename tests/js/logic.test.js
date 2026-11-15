@@ -236,6 +236,56 @@ test("panelLayout: üst, sol ve sağ panel", () => {
     }
 });
 
+test("panelLayout: gerçek panel penceresi istemci alanından önce gelir", () => {
+    const panel = makeWindow({
+        caption: "Panel",
+        normalWindow: false,
+        dock: true,
+        id: "panel"
+    });
+
+    panel.frameGeometry = { x: 0, y: 1012, width: 1920, height: 68 };
+    const ws = makeWorkspace({
+        windows: [panel],
+        clientArea() {
+            return { x: 0, y: 0, width: 1920, height: 1080 };
+        }
+    });
+    const layout = Logic.panelLayout(ws, 44);
+
+    assert.strictEqual(layout[0].edge, "bottom");
+    assert.strictEqual(layout[0].thickness, 68);
+});
+
+test("detectPanel: sol, sağ ve üst kenarlar", () => {
+    const cases = [
+        { rect: { x: 0, y: 0, width: 48, height: 1080 }, edge: "left", thickness: 48 },
+        { rect: { x: 1860, y: 0, width: 60, height: 1080 }, edge: "right", thickness: 60 },
+        { rect: { x: 0, y: 0, width: 1920, height: 32 }, edge: "top", thickness: 32 },
+        { rect: { x: 0, y: 1036, width: 1920, height: 44 }, edge: "bottom", thickness: 44 }
+    ];
+    const screen = { x: 0, y: 0, width: 1920, height: 1080 };
+
+    for (const c of cases) {
+        const panel = makeWindow({ normalWindow: false, dock: true });
+
+        panel.frameGeometry = c.rect;
+        const ws = makeWorkspace({ windows: [panel] });
+        const found = Logic.detectPanel(ws, screen);
+
+        assert.notStrictEqual(found, null);
+        assert.strictEqual(found.edge, c.edge);
+        assert.strictEqual(found.thickness, c.thickness);
+    }
+});
+
+test("detectPanel: panel yoksa null", () => {
+    const win = makeWindow({});
+    const ws = makeWorkspace({ windows: [win] });
+
+    assert.strictEqual(Logic.detectPanel(ws, { x: 0, y: 0, width: 1920, height: 1080 }), null);
+});
+
 test("panelLayout: panel yoksa yedek yükseklik", () => {
     const ws = makeWorkspace({
         clientArea() {

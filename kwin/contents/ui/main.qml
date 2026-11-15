@@ -737,34 +737,49 @@ Item {
         for (var i = 0; i < list.length; i++) {
             root.hookWindow(list[i]);
         }
-        root.ws.windowAdded.connect(function(w) {
-            root.hookWindow(w);
-            root.scheduleLayoutReport();
-        });
-        root.ws.windowRemoved.connect(function() {
-            root.scheduleLayoutReport();
-        });
-        root.ws.windowActivated.connect(function() {
-            root.scheduleLayoutReport();
-        });
-        root.ws.currentDesktopChanged.connect(function() {
-            root.scheduleLayoutReport();
-        });
-        root.ws.currentActivityChanged.connect(function() {
-            root.scheduleLayoutReport();
-        });
-        root.ws.screensChanged.connect(function() {
-            root.scheduleLayoutReport();
-        });
-        root.ws.screenOrderChanged.connect(function() {
-            root.scheduleLayoutReport();
-        });
-        root.ws.virtualScreenGeometryChanged.connect(function() {
-            root.scheduleLayoutReport();
-        });
-        root.ws.screensChanged.connect(function() {
-            root.reconnectScreens();
-        });
+        root.ws.windowAdded.connect(root.onWorkspaceWindowAdded);
+        root.ws.windowRemoved.connect(root.onWorkspaceLayoutChange);
+        root.ws.windowActivated.connect(root.onWorkspaceLayoutChange);
+        root.ws.currentDesktopChanged.connect(root.onWorkspaceLayoutChange);
+        root.ws.currentActivityChanged.connect(root.onWorkspaceLayoutChange);
+        root.ws.screensChanged.connect(root.onWorkspaceLayoutChange);
+        root.ws.screenOrderChanged.connect(root.onWorkspaceLayoutChange);
+        root.ws.virtualScreenGeometryChanged.connect(root.onWorkspaceLayoutChange);
+        root.ws.screensChanged.connect(root.onWorkspaceScreensChanged);
+        root.reconnectScreens();
+    }
+
+    /*
+     * Betik yeniden yüklenirken eski örnek bir süre çalışmaya devam eder;
+     * işleyicileri bırakmazsak her olay iki kez işlenir (ör. masaüstü iki kez
+     * açılıp kapanır). Bu yüzden bağlantılar kapanışta çözülür.
+     */
+    function disconnectWorkspace() {
+        var ws = root.ws;
+        if (!ws) {
+            return;
+        }
+        ws.windowAdded.disconnect(root.onWorkspaceWindowAdded);
+        ws.windowRemoved.disconnect(root.onWorkspaceLayoutChange);
+        ws.windowActivated.disconnect(root.onWorkspaceLayoutChange);
+        ws.currentDesktopChanged.disconnect(root.onWorkspaceLayoutChange);
+        ws.currentActivityChanged.disconnect(root.onWorkspaceLayoutChange);
+        ws.screensChanged.disconnect(root.onWorkspaceLayoutChange);
+        ws.screenOrderChanged.disconnect(root.onWorkspaceLayoutChange);
+        ws.virtualScreenGeometryChanged.disconnect(root.onWorkspaceLayoutChange);
+        ws.screensChanged.disconnect(root.onWorkspaceScreensChanged);
+    }
+
+    function onWorkspaceWindowAdded(w) {
+        root.hookWindow(w);
+        root.scheduleLayoutReport();
+    }
+
+    function onWorkspaceLayoutChange() {
+        root.scheduleLayoutReport();
+    }
+
+    function onWorkspaceScreensChanged() {
         root.reconnectScreens();
     }
 
@@ -799,11 +814,12 @@ Item {
         root.kwinPropertyGet("showingDesktop", function(value) {
             root.desktopShown = value === true;
         });
-        root.reportEvent("script-loaded", {});
+        root.reportEvent("script-loaded", { version: 2 });
     }
 
     Component.onDestruction: {
         root.shuttingDown = true;
+        root.disconnectWorkspace();
         root.peekRestoreNow();
         settingsRefreshTimer.stop();
         pollTimer.stop();

@@ -303,6 +303,8 @@ function closeActive(ws) {
 
 /* --- Panel düzeni ----------------------------------------------------- */
 
+var DOCK_WINDOW_TYPE = 2;   /* KWin::WindowType::Dock */
+
 function rectOf(area) {
     if (area === null || area === undefined) {
         return null;
@@ -317,11 +319,81 @@ function rectOf(area) {
     return { x: x, y: y, width: w, height: h };
 }
 
+function intersects(a, b) {
+    return a.x < b.x + b.width && a.x + a.width > b.x
+        && a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+/*
+ * KWin 6'da `workspace.panels` yoktur; paneller `stackingOrder` içinde
+ * Dock türünde pencereler olarak görünür. Panel penceresini bulur.
+ */
+function panelWindow(ws, screenGeo) {
+    var wins = ws.stackingOrder || [];
+    for (var i = 0; i < wins.length; i++) {
+        var w = wins[i];
+        if (w === null || w === undefined) {
+            continue;
+        }
+        var isDock = w.dock === true || w.windowType === DOCK_WINDOW_TYPE;
+        if (!isDock) {
+            continue;
+        }
+        var r = rectOf(w.frameGeometry !== undefined ? w.frameGeometry : w.geometry);
+        if (r !== null && intersects(r, screenGeo)) {
+            return r;
+        }
+    }
+    return null;
+}
+
+/* Panel penceresinden hangi kenarda olduğunu ve kalınlığını çıkarır. */
+function detectPanel(ws, screenGeo) {
+    var panel = panelWindow(ws, screenGeo);
+
+    if (panel === null) {
+        return null;
+    }
+    var right = screenGeo.x + screenGeo.width;
+    var bottom = screenGeo.y + screenGeo.height;
+    var candidates = [
+        { edge: "top", value: panel.y + panel.height - screenGeo.y,
+          ok: panel.y <= screenGeo.y },
+        { edge: "bottom", value: bottom - panel.y,
+          ok: panel.y + panel.height >= bottom },
+        { edge: "left", value: panel.x + panel.width - screenGeo.x,
+          ok: panel.x <= screenGeo.x },
+        { edge: "right", value: right - panel.x,
+          ok: panel.x + panel.width >= right }
+    ];
+    var best = null;
+
+    for (var i = 0; i < candidates.length; i++) {
+        var c = candidates[i];
+
+        if (!c.ok || c.value <= 0) {
+            continue;
+        }
+        /* Kenar boyunca uzanan panel, ekranın yarısından kalın olamaz. */
+        var limit = (c.edge === "left" || c.edge === "right")
+            ? screenGeo.width / 2 : screenGeo.height / 2;
+        if (c.value >= limit) {
+            continue;
+        }
+        if (best === null || c.value > best.value) {
+            best = c;
+        }
+    }
+    if (best === null) {
+        return null;
+    }
+    return { edge: best.edge, thickness: Math.round(best.value) };
+}
+
 function detectEdge(full, max, epsilon) {
     if (full === null || max === null) {
         return null;
-    }
-    var e = epsilon || 1;
+    }    var e = epsilon || 1;
     var left = max.x - full.x;
     var top = max.y - full.y;
     var right = (full.x + full.width) - (max.x + max.width);
@@ -366,7 +438,12 @@ function panelLayout(ws, fallbackHeight) {
             max = rectOf(ws.clientArea(maxOption, screen, desktop));
         }
 
-        var panel = detectEdge(full, max, 1);
+        /* Önce gerçek panel penceresi, sonra istemci alanı farkı. */
+        var panel = detectPanel(ws, geometry);
+
+        if (panel === null) {
+            panel = detectEdge(full, max, 1);
+        }
         var edge = panel ? panel.edge : "none";
         var thickness = panel ? panel.thickness : fallback;
 
@@ -511,6 +588,7 @@ if (typeof module !== "undefined" && module.exports) {
         restoreAllMinimized: restoreAllMinimized,
         closeActive: closeActive,
         panelLayout: panelLayout,
+        detectPanel: detectPanel,
         peekBegin: peekBegin,
         peekEnd: peekEnd,
         shakeDetector: shakeDetector,
