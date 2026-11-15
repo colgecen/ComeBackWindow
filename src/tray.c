@@ -2,7 +2,7 @@
  * StatusNotifierItem tepsi simgesi
  *
  * Menü, `com.canonical.dbusmenu` sunucusu ile ayrı bir nesnede yayınlanır
- * (bkz. tray_menu.c). Simge, tema simgesi yoksa çizilen 22 px turuncu
+ * (bkz. tray_menu.c). Simge, tema simgesi yoksa çizilen 22 px mavi
  * "geri" okuyla sağlanır.
  */
 #include "i18n.h"
@@ -90,7 +90,7 @@ static GVariant *build_pixmap(void)
         CAIRO_FORMAT_ARGB32, size, size);
     cairo_t *cr = cairo_create(surface);
 
-    cairo_set_source_rgba(cr, 0.91, 0.35, 0.09, 1.0);
+    cairo_set_source_rgba(cr, 0.24, 0.68, 0.91, 1.0);
     cairo_rectangle(cr, 0, 0, size, size);
     cairo_fill(cr);
     cairo_set_source_rgba(cr, 1, 1, 1, 1);

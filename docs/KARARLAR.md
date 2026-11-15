@@ -85,5 +85,7 @@ Ek doğrulamalar:
   köşesine yapışır ve panel kalınlığı kadar yükseklikte panelin son
   dilimini kaplar (Windows'taki "Masaüstünü Göster" düğmesi gibi). Panel
   marjini kaldırıldı; şerit her zaman görünür kenara sıfır boşlukla oturur.
-  Görünürlük için koyu yarı saydam zemin + masaüstüne bakan turuncu çizgi
-  kullanılır; 6 px genişlikte ok çizilmez.
+  Görünürlük için mavi yarı saydam gövde + masaüstüne bakan açık mavi
+  çizgi kullanılır; varsayılan genişlik 10 px'tir. Masaüstü açıkken şeride
+  basıldığında KWin masaüstünü kendisi geri getirir; uygulama 400 ms
+  içindeki geri getirme olayını görüp ikinci kez aç/kapat yapmaz.

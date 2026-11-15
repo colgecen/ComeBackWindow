@@ -70,6 +70,8 @@ struct _App {
     /* Şerit tıklaması: basma anındaki masaüstü durumu ve gecikmeli işlem */
     gboolean click_shown_at_press;
     guint click_timeout;
+    /* Masaüstü en son ne zaman geri getirildi (monotonik µs) */
+    gint64 desktop_restored_at;
 
     /* Kısayol çakışma yönetimi sonucu */
     gboolean native_show_desktop;

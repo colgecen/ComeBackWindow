@@ -46,7 +46,7 @@ static void test_defaults(void)
     settings_init_defaults(&s);
     CHECK_INT_EQ(s.autostart, TRUE);
     CHECK_INT_EQ(s.strip_enabled, TRUE);
-    CHECK_INT_EQ(s.strip_width, 6);
+    CHECK_INT_EQ(s.strip_width, 10);
     CHECK_INT_EQ(s.fallback_height, 44);
     CHECK_INT_EQ(s.peek_enabled, TRUE);
     CHECK_INT_EQ(s.peek_delay_ms, 500);
@@ -97,7 +97,7 @@ static void test_missing_file(void)
     CHECK(settings_load(&s, &error) == TRUE);
     g_assert_no_error(error);
     CHECK_STR_EQ(s.language, "auto");
-    CHECK_INT_EQ(s.strip_width, 6);
+    CHECK_INT_EQ(s.strip_width, 10);
     settings_clear(&s);
 }
 
@@ -154,7 +154,7 @@ static void test_corrupt_file(void)
     settings_init_defaults(&s);
     /* Bozuk dosya varsayılanlarla birlikte okunur. */
     settings_load(&s, &error);
-    CHECK_INT_EQ(s.strip_width, 6);
+    CHECK_INT_EQ(s.strip_width, 10);
     g_clear_error(&error);
     settings_clear(&s);
 }
@@ -179,7 +179,7 @@ static void test_corrupt_backup(void)
     g_clear_error(&error);
     CHECK(config_exists() == FALSE);
     CHECK(settings_load(&s, &error) == TRUE); /* dosya yok: varsayılan */
-    CHECK_INT_EQ(s.strip_width, 6);
+    CHECK_INT_EQ(s.strip_width, 10);
     g_clear_error(&error);
     settings_clear(&s);
     g_free(path);

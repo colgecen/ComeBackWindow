@@ -46,7 +46,7 @@ void settings_init_defaults(Settings *s)
 
     s->autostart = TRUE;
     s->strip_enabled = TRUE;
-    s->strip_width = 6;
+    s->strip_width = 10;
     s->fallback_height = 44;
     s->peek_enabled = TRUE;
     s->peek_delay_ms = 500;

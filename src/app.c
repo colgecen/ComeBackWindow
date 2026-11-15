@@ -308,7 +308,10 @@ static gboolean strip_click_cb(gpointer data)
     App *app = data;
 
     app->click_timeout = 0;
-    if (app->click_shown_at_press != app->desktop_shown) {
+    gboolean just_restored = app->desktop_restored_at != 0
+        && g_get_monotonic_time() - app->desktop_restored_at < 400 * 1000;
+
+    if (app->click_shown_at_press != app->desktop_shown || just_restored) {
         app_log(app, "şerit tıklaması: masaüstü durumu KWin tarafından "
                 "değiştirildi, ek işlem yok");
         return G_SOURCE_REMOVE;
@@ -360,6 +363,12 @@ void app_handle_event(App *app, const gchar *name, const gchar *json)
     }
     if (g_strcmp0(name, "desktop-restored") == 0) {
         app->desktop_shown = FALSE;
+        /*
+         * KWin, Masaüstünü Göster açıkken gelen ilk düğme olayında masaüstünü
+         * kendisi geri getirir. Şerit tıklaması bu olayla aynı ana denk
+         * geldiğinde ikinci kez aç/kapat yapılmaması için zamanı sakla.
+         */
+        app->desktop_restored_at = g_get_monotonic_time();
         tray_update_status(app->tray);
         return;
     }
