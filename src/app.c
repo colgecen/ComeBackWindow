@@ -43,6 +43,32 @@ void app_warn(App *app, const gchar *format, ...)
     g_free(message);
 }
 
+static gboolean has_kwin_script(const gchar *dir)
+{
+    gchar *path = g_build_filename(dir, "kwin", "contents", "ui", "main.qml",
+                                   NULL);
+    gboolean found = g_file_test(path, G_FILE_TEST_IS_REGULAR);
+
+    g_free(path);
+    return found;
+}
+
+/* Geliştirme kolaylığı: kurulu veri yoksa çalıştırılabilir dosyanın yanı. */
+static gchar *exe_dir(void)
+{
+    GError *error = NULL;
+    gchar *exe = g_file_read_link("/proc/self/exe", &error);
+
+    if (exe == NULL) {
+        g_clear_error(&error);
+        return NULL;
+    }
+    gchar *dir = g_path_get_dirname(exe);
+
+    g_free(exe);
+    return dir;
+}
+
 gchar *app_data_dir(void)
 {
     const gchar *override = g_getenv("CBW_DATA_DIR");
@@ -50,7 +76,19 @@ gchar *app_data_dir(void)
     if (override != NULL && *override != '\0') {
         return g_strdup(override);
     }
-    return g_build_filename(CBW_DATADIR, "comebackwindow", NULL);
+    gchar *installed = g_build_filename(CBW_DATADIR, "comebackwindow", NULL);
+
+    if (has_kwin_script(installed)) {
+        return installed;
+    }
+    gchar *local = exe_dir();
+
+    if (local != NULL && has_kwin_script(local)) {
+        g_free(installed);
+        return local;
+    }
+    g_free(local);
+    return installed;
 }
 
 gchar *app_kwin_script_path(void)

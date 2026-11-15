@@ -121,8 +121,9 @@ static GtkWidget *add_scale(GtkWidget *box, const gchar *text, gdouble value,
 
 static GtkWidget *add_language(GtkWidget *box, const gchar *current)
 {
+    /* gtk_drop_down_new_from_strings NULL ile sonlanmış dizi bekler. */
     const gchar *names[] = {
-        _(language_names[0]), _(language_names[1]), _(language_names[2])
+        _(language_names[0]), _(language_names[1]), _(language_names[2]), NULL
     };
     GtkWidget *widget = gtk_drop_down_new_from_strings(names);
     gint index = 0;
