@@ -40,6 +40,7 @@ TESTBIN := $(BUILD)/tests
 WARN := -std=c11 -Wall -Wextra -Wpedantic -Wshadow -Wformat=2 -Werror
 OPT ?= -O2
 CFLAGS_LOCAL := $(WARN) $(OPT) -g -D_GNU_SOURCE -fPIC -Iprotocols -DCBW_DATADIR=\"$(PREFIX)/share\"
+DEPFLAGS := -MMD -MP
 SANITIZE := -fsanitize=address,undefined -fno-omit-frame-pointer
 LDLIBS_LOCAL := -lm
 
@@ -76,7 +77,10 @@ help:
 
 $(OBJDIR)/%.o: src/%.c
 	@mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS_LOCAL) $(PKG_CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS_LOCAL) $(DEPFLAGS) $(PKG_CFLAGS) -c $< -o $@
+
+# Başlık bağımlılıkları: app.h değişince tüm nesneler yenilenir.
+-include $(wildcard $(OBJDIR)/*.d)
 
 $(LAYER_HDR): $(LAYER_XML)
 	$(WAYLAND_SCANNER) client-header $< $@
