@@ -13,6 +13,21 @@ static gchar *locale_dir(void)
     if (override != NULL && *override != '\0') {
         return g_strdup(override);
     }
+    const gchar *appdir = g_getenv("APPDIR");
+
+    if (appdir != NULL && *appdir != '\0') {
+        gchar *in_image = g_build_filename(appdir, "usr", "share", "locale",
+                                           NULL);
+        gchar *catalog = g_build_filename(in_image, "en", "LC_MESSAGES",
+                                          "comebackwindow.mo", NULL);
+
+        if (g_file_test(catalog, G_FILE_TEST_IS_REGULAR)) {
+            g_free(catalog);
+            return in_image;
+        }
+        g_free(catalog);
+        g_free(in_image);
+    }
     GError *error = NULL;
     gchar *exe = g_file_read_link("/proc/self/exe", &error);
 

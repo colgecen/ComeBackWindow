@@ -76,6 +76,17 @@ gchar *app_data_dir(void)
     if (override != NULL && *override != '\0') {
         return g_strdup(override);
     }
+    const gchar *appdir = g_getenv("APPDIR");
+
+    if (appdir != NULL && *appdir != '\0') {
+        gchar *in_image = g_build_filename(appdir, "usr", "share",
+                                           "comebackwindow", NULL);
+
+        if (has_kwin_script(in_image)) {
+            return in_image;
+        }
+        g_free(in_image);
+    }
     gchar *installed = g_build_filename(CBW_DATADIR, "comebackwindow", NULL);
 
     if (has_kwin_script(installed)) {

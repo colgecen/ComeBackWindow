@@ -275,7 +275,29 @@ linux_appimage() {
 #!/bin/sh
 HERE="\$(dirname "\$(readlink -f "\$0")")"
 export APPDIR="\$HERE"
-exec "\$HERE/usr/bin/$APP" "\$@"
+export PATH="\$HERE/usr/bin:\$PATH"
+export XDG_DATA_DIRS="\$HERE/usr/share:\${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+export CBW_DATA_DIR="\$HERE/usr/share/comebackwindow"
+export CBW_LOCALE_DIR="\$HERE/usr/share/locale"
+BIN="\$HERE/usr/bin/$APP"
+if [ "\${CBW_AUTOSTART:-0}" = "1" ]; then
+  exec "\$BIN"
+fi
+if [ \$# -gt 0 ]; then
+  exec "\$BIN" "\$@"
+fi
+if [ -t 0 ] && [ -t 1 ]; then
+  exec "\$BIN"
+fi
+if [ -n "\${CBW_CONFIG_DIR:-}" ]; then
+  cfg="\$CBW_CONFIG_DIR/config.ini"
+else
+  cfg="\${XDG_CONFIG_HOME:-\$HOME/.config}/comebackwindow/config.ini"
+fi
+if grep -q '^first_run_done=true' "\$cfg" 2>/dev/null; then
+  exec "\$BIN" --settings
+fi
+exec "\$BIN"
 APPRUN
   chmod +x "$appdir/AppRun"
 

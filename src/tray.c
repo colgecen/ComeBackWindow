@@ -93,10 +93,21 @@ static cairo_surface_t *load_icon_surface(void)
     gchar *installed = g_build_filename(CBW_DATADIR, "icons", "hicolor",
                                         "512x512", "apps",
                                         "comebackwindow.png", NULL);
+    const gchar *appdir = g_getenv("APPDIR");
+    gchar *in_image = appdir != NULL && *appdir != '\0'
+        ? g_build_filename(appdir, "comebackwindow.png", NULL) : NULL;
     cairo_surface_t *surface = NULL;
 
     if (g_file_test(repo, G_FILE_TEST_IS_REGULAR)) {
         surface = cairo_image_surface_create_from_png(repo);
+    }
+    if ((surface == NULL
+         || cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS)
+        && in_image != NULL && g_file_test(in_image, G_FILE_TEST_IS_REGULAR)) {
+        if (surface != NULL) {
+            cairo_surface_destroy(surface);
+        }
+        surface = cairo_image_surface_create_from_png(in_image);
     }
     if ((surface == NULL
          || cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS)
@@ -108,6 +119,7 @@ static cairo_surface_t *load_icon_surface(void)
     }
     g_free(repo);
     g_free(installed);
+    g_free(in_image);
     g_free(data);
     if (surface != NULL
         && cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS) {
