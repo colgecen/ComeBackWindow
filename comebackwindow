@@ -174,8 +174,10 @@ stage_install() {
 }
 
 linux_appimage() {
-  local arch="$1" appdir="$STAGE/$APP-$arch.AppDir"
-  local tool="$CACHE/appimagetool-$arch" runtime="$CACHE/runtime-$arch"
+  local arch="$1"
+  local appdir="$STAGE/$APP-$arch.AppDir"
+  local tool="$CACHE/appimagetool-$arch"
+  local runtime="$CACHE/runtime-$arch"
   mkdir -p "$CACHE"
 
   [ "$arch" = "$ARCHS_DEFAULT" ] \
@@ -226,8 +228,9 @@ DESKTOP
 }
 
 linux_targz() {
-  local arch="$1" name="$APP-$VERSION-linux-$arch" dir
-  dir="$STAGE/$name"
+  local arch="$1"
+  local name="$APP-$VERSION-linux-$arch"
+  local dir="$STAGE/$name"
   stage_install "$dir"
   cp "$ROOT/README.md" "$ROOT/LICENSE" "$dir/" 2>/dev/null || true
   mkdir -p "$DIST"
@@ -236,9 +239,10 @@ linux_targz() {
 }
 
 linux_rpm() {
-  local arch="$1" top="$STAGE/rpm-$arch" ver
+  local arch="$1"
+  local top="$STAGE/rpm-$arch"
+  local ver="${VERSION%%-*}"
   command -v rpmbuild >/dev/null 2>&1 || die "rpmbuild not found (sudo dnf install rpm-build)."
-  ver="${VERSION%%-*}"
   rm -rf "$top"
   mkdir -p "$top"/{BUILD,RPMS,SOURCES,SPECS,SRPMS} "$DIST"
   stage_install "$top/SOURCES/root"
