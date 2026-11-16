@@ -59,7 +59,7 @@ static void test_content(void)
     g_assert_no_error(error);
     CHECK(g_file_get_contents(path, &contents, NULL, NULL) == TRUE);
     CHECK(strstr(contents, "[Desktop Entry]") != NULL);
-    CHECK(strstr(contents, "Exec=comebackwindow") != NULL);
+    CHECK(strstr(contents, "Exec=env CBW_AUTOSTART=1 ") != NULL);
     CHECK(strstr(contents, "X-KDE-autostart-after=panel") != NULL);
     CHECK(strstr(contents, "Icon=comebackwindow") != NULL);
     CHECK(strstr(contents, "NoDisplay=true") != NULL);
