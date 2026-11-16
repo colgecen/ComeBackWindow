@@ -477,6 +477,7 @@ static GtkWidget *build_settings_window(SettingsDialog *dialog)
     gtk_box_append(GTK_BOX(columns), right);
     gtk_box_append(GTK_BOX(outer), columns);
     gtk_box_append(GTK_BOX(outer), dialog_buttons(dialog));
+    gtk_widget_set_valign(outer, GTK_ALIGN_CENTER);
     gtk_window_set_child(GTK_WINDOW(window), outer);
     return window;
 }
