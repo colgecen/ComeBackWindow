@@ -33,10 +33,10 @@ produce readable diffs.
 #### How it works
 
 The script starts a throwaway instance with a demo configuration (English UI,
-text strip), opens the real settings window, and captures the actual windows
-through KDE Spectacle. The PNG bytes are then embedded in a lightweight SVG
-wrapper. Requirements: a KDE Plasma session, `spectacle` and ImageMagick. Stop
-any running instance first.
+text strip) on a private Xvfb display, opens the real settings window, and
+captures the actual windows with ImageMagick. The PNG bytes are then embedded
+in a lightweight SVG wrapper. Requirements: `Xvfb` and ImageMagick; the user's
+desktop is never captured.
 
 ## Features
 
