@@ -29,7 +29,8 @@ BIN="build/comebackwindow"                     # build output, relative to the r
 SUMMARY="Windows-style shortcuts, Aero Peek and a Show Desktop strip for KDE Plasma 6"
 LICENSE_ID="MIT"
 WINDOWS_SUPPORTED="no"                         # Linux-only (KDE Plasma 6 / Wayland)
-ICON="assets/comebackwindow.svg"
+ICON="assets/icon.png"                   # owner-provided icon source, 512x512 PNG
+ICON_RADIUS_PCT="20"                    # corner radius as % of icon size
 VERSION="${VERSION:-$(sed -n 's/^#define CBW_VERSION "\(.*\)"/\1/p' "$(dirname "${BASH_SOURCE[0]}")/src/version.h" 2>/dev/null || echo 0.1.0)}"
 
 # ---- locate the repository root (resolves symlinks) ----
@@ -84,21 +85,56 @@ run_app() {
 # Install / uninstall the bare `comebackwindow` command
 # =====================================================================
 WRAPPER_MARK="# comebackwindow-wrapper"
-DESKTOP_FILE="$HOME/.local/share/applications/org.comebackwindow.App.desktop"
-ICONS_DIR="$HOME/.local/share/icons/hicolor"
-ICON_SIZES_LOCAL="16 22 24 32 48 64 128 256"
+DESKTOP_MARK="# comebackwindow-desktop"
+DESKTOP_FILE="$HOME/.local/share/applications/$APP.desktop"
+ICON_DIR="$HOME/.local/share/icons/hicolor/512x512/apps"
 
 refresh_caches() {
   command -v update-desktop-database >/dev/null 2>&1 \
     && update-desktop-database "$HOME/.local/share/applications" >/dev/null 2>&1 || true
   command -v gtk-update-icon-cache >/dev/null 2>&1 \
-    && gtk-update-icon-cache -f -t "$ICONS_DIR" >/dev/null 2>&1 || true
+    && gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
   command -v kbuildsycoca6 >/dev/null 2>&1 && kbuildsycoca6 >/dev/null 2>&1 || true
 }
 
+# prepare_icon <dest>: write the icon, rounding square corners (needs ImageMagick).
+prepare_icon() {
+  local src="$ROOT/$ICON" dest="$1" im="" ident="" w r corner
+  [ -f "$src" ] || return 1
+  if command -v magick >/dev/null 2>&1; then
+    im="magick"; ident="magick identify"
+  elif command -v convert >/dev/null 2>&1; then
+    im="convert"; ident="identify"
+  fi
+  if [ -z "$im" ]; then
+    echo "NOTE: ImageMagick not found, icon copied without rounding."
+    cp "$src" "$dest"; return 0
+  fi
+  w="$($ident -format '%w' "$src")"
+  r=$(( w * ICON_RADIUS_PCT / 100 ))
+  corner="$($ident -format '%[fx:p{0,0}.a]' "$src" 2>/dev/null || echo 1)"
+  if [ "$corner" = "0" ]; then
+    cp "$src" "$dest"
+  else
+    $im "$src" -alpha set \
+      \( -size "${w}x${w}" xc:none -fill white \
+         -draw "roundrectangle 0,0 $((w-1)),$((w-1)) $r,$r" \) \
+      -compose DstIn -composite "$dest"
+  fi
+}
+
 install_desktop() {
-  mkdir -p "$(dirname "$DESKTOP_FILE")"
+  local apps="$HOME/.local/share/applications"
+  mkdir -p "$apps" "$ICON_DIR"
+  # Remove the previous, non-standard registration if present.
+  rm -f "$apps/org.comebackwindow.App.desktop"
+  rm -f "$HOME/.local/share/icons/hicolor/scalable/apps/$APP.svg"
+  for s in 16 22 24 32 48 64 128 256; do
+    rm -f "$HOME/.local/share/icons/hicolor/${s}x${s}/apps/$APP.png"
+  done
+  if prepare_icon "$ICON_DIR/$APP.png"; then :; fi
   cat > "$DESKTOP_FILE" << DESKTOP
+$DESKTOP_MARK
 [Desktop Entry]
 Type=Application
 Name=Come Back Window
@@ -110,25 +146,16 @@ Categories=Utility;
 Keywords=desktop;window;shortcut;peek;shake;
 StartupNotify=false
 DESKTOP
-
-  make -s -C "$ROOT" icons >/dev/null 2>&1 || true
-  if [ -f "$ROOT/assets/$APP.svg" ]; then
-    install -Dm644 "$ROOT/assets/$APP.svg" "$ICONS_DIR/scalable/apps/$APP.svg"
-  fi
-  for s in $ICON_SIZES_LOCAL; do
-    [ -f "$ROOT/assets/$APP-$s.png" ] \
-      && install -Dm644 "$ROOT/assets/$APP-$s.png" "$ICONS_DIR/${s}x${s}/apps/$APP.png"
-  done
   refresh_caches
-  echo "Added to the application launcher: Come Back Window"
+  echo "Installed: $DESKTOP_FILE (appears in the application launcher)"
 }
 
 remove_desktop() {
-  rm -f "$DESKTOP_FILE"
-  rm -f "$ICONS_DIR/scalable/apps/$APP.svg"
-  for s in $ICON_SIZES_LOCAL; do
-    rm -f "$ICONS_DIR/${s}x${s}/apps/$APP.png"
-  done
+  if [ -f "$DESKTOP_FILE" ] && grep -q "$DESKTOP_MARK" "$DESKTOP_FILE"; then
+    rm -f "$DESKTOP_FILE"
+  fi
+  rm -f "$ICON_DIR/$APP.png"
+  rm -f "$HOME/.local/share/applications/org.comebackwindow.App.desktop"
   refresh_caches
   echo "Removed from the application launcher."
 }
@@ -262,7 +289,9 @@ Terminal=false
 Type=Application
 Categories=Utility;
 DESKTOP
-  cp "$appdir/usr/share/icons/hicolor/256x256/apps/$APP.png" "$appdir/$APP.png"
+  prepare_icon "$appdir/$APP.png"
+  cp "$appdir/$APP.png" \
+    "$appdir/usr/share/icons/hicolor/512x512/apps/$APP.png"
   ln -sf "$APP.png" "$appdir/.DirIcon"
 
   mkdir -p "$DIST"

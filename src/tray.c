@@ -2,8 +2,8 @@
  * StatusNotifierItem tepsi simgesi
  *
  * Menü, `com.canonical.dbusmenu` sunucusu ile ayrı bir nesnede yayınlanır
- * (bkz. tray_menu.c). Simge, tema simgesi yoksa çizilen 22 px mavi
- * "geri" okuyla sağlanır.
+ * (bkz. tray_menu.c). Simge, kullanicinin sagladigi assets/icon.png
+ * dosyasindan 22 px'e olceklenerek verilir.
  */
 #include "i18n.h"
 #include "tray.h"
@@ -83,43 +83,67 @@ typedef struct {
     guchar b, g, r, a;
 } Pixel;
 
+static GVariant *empty_pixmap(void);
+
+/* Kullanicinin sagladigi assets/icon.png dosyasini yukler (kurulu veya depo). */
+static cairo_surface_t *load_icon_surface(void)
+{
+    gchar *data = app_data_dir();
+    gchar *repo = g_build_filename(data, "assets", "icon.png", NULL);
+    gchar *installed = g_build_filename(CBW_DATADIR, "icons", "hicolor",
+                                        "512x512", "apps",
+                                        "comebackwindow.png", NULL);
+    cairo_surface_t *surface = NULL;
+
+    if (g_file_test(repo, G_FILE_TEST_IS_REGULAR)) {
+        surface = cairo_image_surface_create_from_png(repo);
+    }
+    if ((surface == NULL
+         || cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS)
+        && g_file_test(installed, G_FILE_TEST_IS_REGULAR)) {
+        if (surface != NULL) {
+            cairo_surface_destroy(surface);
+        }
+        surface = cairo_image_surface_create_from_png(installed);
+    }
+    g_free(repo);
+    g_free(installed);
+    g_free(data);
+    if (surface != NULL
+        && cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS) {
+        cairo_surface_destroy(surface);
+        return NULL;
+    }
+    return surface;
+}
+
 static GVariant *build_pixmap(void)
 {
     const gint size = 22;
+    cairo_surface_t *icon = load_icon_surface();
+
+    if (icon == NULL) {
+        return empty_pixmap();
+    }
+    gint iw = cairo_image_surface_get_width(icon);
+    gint ih = cairo_image_surface_get_height(icon);
+
+    if (iw <= 0 || ih <= 0) {
+        cairo_surface_destroy(icon);
+        return empty_pixmap();
+    }
     cairo_surface_t *surface = cairo_image_surface_create(
         CAIRO_FORMAT_ARGB32, size, size);
     cairo_t *cr = cairo_create(surface);
+    gdouble scale = (gdouble)size / MAX(iw, ih);
 
-    /* Kullanicinin sagladigi simge: beyaz yuvarlatilmis kare + geri oku. */
-    cairo_set_source_rgba(cr, 0, 0, 0, 0);
+    cairo_scale(cr, scale, scale);
+    cairo_set_source_surface(cr, icon,
+                             (size / scale - iw) / 2.0,
+                             (size / scale - ih) / 2.0);
     cairo_paint(cr);
-    gdouble r = 4.5;
-
-    cairo_new_sub_path(cr);
-    cairo_arc(cr, 0.5 + r, 0.5 + r, r, G_PI, 1.5 * G_PI);
-    cairo_arc(cr, size - 0.5 - r, 0.5 + r, r, 1.5 * G_PI, 2.0 * G_PI);
-    cairo_arc(cr, size - 0.5 - r, size - 0.5 - r, r, 0, 0.5 * G_PI);
-    cairo_arc(cr, 0.5 + r, size - 0.5 - r, r, 0.5 * G_PI, G_PI);
-    cairo_close_path(cr);
-    cairo_set_source_rgba(cr, 1, 1, 1, 1);
-    cairo_fill(cr);
-
-    cairo_save(cr);
-    cairo_scale(cr, size / 256.0, size / 256.0);
-    cairo_set_source_rgba(cr, 0.07, 0.07, 0.07, 1.0);
-    cairo_set_line_width(cr, 30.0);
-    cairo_move_to(cr, 52, 190);
-    cairo_line_to(cr, 166, 190);
-    cairo_arc(cr, 166, 156, 34, 0.5 * G_PI, -0.5 * G_PI);
-    cairo_line_to(cr, 104, 122);
-    cairo_stroke(cr);
-    cairo_move_to(cr, 40, 122);
-    cairo_line_to(cr, 106, 84);
-    cairo_line_to(cr, 106, 160);
-    cairo_close_path(cr);
-    cairo_fill(cr);
-    cairo_restore(cr);
     cairo_destroy(cr);
+    cairo_surface_destroy(icon);
     cairo_surface_flush(surface);
 
     guchar *data = cairo_image_surface_get_data(surface);

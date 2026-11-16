@@ -3,7 +3,7 @@
 # Hedefler:
 #   make                uygulamayı derle
 #   make deps-check     gerekli pkg-config modüllerini denetle
-#   make icons          SVG'den PNG ikonları üret
+#   make                uygulamayı derle
 #   make mo             çevirileri derle
 #   make lint           statik denetim
 #   make test-unit      C birim testleri
@@ -60,13 +60,10 @@ SRC := $(wildcard src/*.c)
 OBJ := $(patsubst src/%.c,$(OBJDIR)/%.o,$(SRC))
 BIN := $(BUILD)/comebackwindow
 
-ICON_SIZES := 16 22 24 32 48 64 128 256
-ICON_PNGS := $(foreach s,$(ICON_SIZES),assets/comebackwindow-$(s).png)
-
 TESTS_C := $(wildcard tests/unit/test_*.c)
 TESTS_BIN := $(patsubst tests/unit/%.c,$(TESTBIN)/%,$(TESTS_C))
 
-.PHONY: all deps-check icons cover pot mo lint test-unit test-js test-validate \
+.PHONY: all deps-check pot mo lint test-unit test-js test-validate \
         test-asan test-integration check install uninstall dist clean \
         protos help
 
@@ -121,34 +118,6 @@ deps-check:
 	fi; \
 	echo "Tüm pkg-config modülleri hazır."
 	@command -v $(WAYLAND_SCANNER) >/dev/null || { echo "wayland-scanner eksik (wayland-devel / wayland paketi)"; exit 1; }
-
-icons: $(ICON_PNGS)
-	@echo "İkonlar üretildi: $(ICON_PNGS)"
-
-# Tanıtım kapak görseli (README/arşiv); ImageMagick 7 gerekir.
-cover: assets/cover.png
-
-assets/cover.png: assets/comebackwindow-256.png
-	@command -v magick >/dev/null || { echo "magick gerekli (ImageMagick 7)"; exit 1; }
-	magick -size 1200x630 xc:'#1c86c4' \
-	  \( $< -resize 280x280 \) -gravity NorthWest -geometry +90+175 -composite \
-	  -font Noto-Sans-Bold -pointsize 74 -fill white \
-	  -gravity NorthWest -annotate +430+205 'Come Back Window' \
-	  -font Noto-Sans-Regular -pointsize 34 -fill '#eaf6fd' \
-	  -gravity NorthWest -annotate +432+300 'Windows tarzı pencere kısayolları' \
-	  -font Noto-Sans-Regular -pointsize 27 -fill '#c7e7f7' \
-	  -gravity NorthWest -annotate +432+355 'KDE Plasma 6 · Wayland' \
-	  $@
-
-# Simgeler kullanicinin sagladigi JPEG'den uretilir; koseler yuvarlatilir.
-assets/comebackwindow-%.png: assets/comeback.jpg
-	@size=$*; radius=$$((size * 22 / 100)); \
-	tool=$$(command -v magick 2>/dev/null || command -v convert); \
-	$$tool "$<" -resize "$$((size * 84 / 100))x$$((size * 84 / 100))" \
-	  -background none -gravity center -extent "$${size}x$${size}" -alpha set \
-	  \( -size "$${size}x$${size}" xc:none -fill white \
-	     -draw "roundrectangle 0,0,$$((size - 1)),$$((size - 1)),$$radius,$$radius" \) \
-	  -compose DstIn -composite "$@"
 
 po/%.mo: po/%.po
 	msgfmt --check -o $@ $<
@@ -252,17 +221,13 @@ tests/helpers/testwin: tests/helpers/testwin.c
 check: lint test-unit test-js test-validate
 	@echo "make check: TÜMÜ YEŞİL"
 
-install: all icons mo
+install: all mo
 	install -Dm755 $(BIN) $(BINDIR)/comebackwindow
 	install -d $(DATADIR)/comebackwindow/kwin
 	cp -r kwin/metadata.json kwin/contents $(DATADIR)/comebackwindow/kwin/
 	install -d $(DATADIR)/comebackwindow/kwin/contents/code
-	install -Dm644 assets/comebackwindow.svg \
-	  $(ICONDIR)/scalable/apps/comebackwindow.svg
-	for s in $(ICON_SIZES); do \
-	  install -Dm644 assets/comebackwindow-$$s.png \
-	    $(ICONDIR)/$${s}x$${s}/apps/comebackwindow.png; \
-	done
+	install -Dm644 assets/icon.png \
+	  $(ICONDIR)/512x512/apps/comebackwindow.png
 	install -Dm644 data/org.comebackwindow.App.desktop \
 	  $(APPDIR)/org.comebackwindow.App.desktop
 	install -Dm644 data/org.comebackwindow.App.metainfo.xml \
@@ -275,17 +240,16 @@ install: all icons mo
 uninstall:
 	rm -f $(BINDIR)/$(BIN)
 	rm -rf $(DATADIR)/comebackwindow
-	rm -f $(ICONDIR)/scalable/apps/comebackwindow.svg
 	rm -f $(APPDIR)/org.comebackwindow.App.desktop
 	rm -f $(METADIR)/org.comebackwindow.App.metainfo.xml
-	for s in $(ICON_SIZES); do rm -f $(ICONDIR)/$${s}x$${s}/apps/comebackwindow.png; done
+	rm -f $(ICONDIR)/512x512/apps/comebackwindow.png
 	for p in po/*.mo; do lang=$$(basename $$p .mo); \
 	  rm -f $(LOCALEDIR)/$$lang/LC_MESSAGES/comebackwindow.mo; done
 
 dist:
 	@ver=$$(sed -n 's/^#define CBW_VERSION "\(.*\)"/\1/p' src/version.h 2>/dev/null || echo 1.0.0); \
 	tar --exclude-vcs --exclude=build --exclude='*.tar.gz' \
-	    --exclude='assets/comebackwindow-*.png' --exclude='*.mo' \
+	    --exclude='*.mo' \
 	    --transform "s,^\.,comebackwindow-$$ver," -czf comebackwindow-$$ver.tar.gz .
 
 clean:
