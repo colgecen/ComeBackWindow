@@ -1,0 +1,364 @@
+#!/usr/bin/env bash
+#
+# comebackwindow - run and build tool (standard launcher for every project)
+#
+# Behaviour:
+#   ./comebackwindow                  Run the app from source (unbuilt). Stop it with Ctrl+C.
+#   comebackwindow                    Open the build menu (after one-time --install, no "./" needed).
+#
+# Commands (reserved flags; every other argument is passed to the app):
+#   ./comebackwindow --install        Install the `comebackwindow` command into ~/.local/bin
+#   ./comebackwindow --uninstall      Remove that command
+#   ./comebackwindow --build          Interactive build menu
+#   ./comebackwindow --build <os> <format> [arch]
+#   ./comebackwindow --build --list   List all build targets
+#
+# Targets:
+#   linux   : appimage | targz | rpm | source | binary | all
+#   windows : disabled for this project
+#   arch    : x86_64 | aarch64 | all          (default: native host architecture)
+#
+# Assets are written to build/dist/ as <project>-<version>-<os>-<arch>.<ext>
+# and a SHA256SUMS file is generated next to them.
+#
+set -euo pipefail
+
+# ---- per-project settings (the only part that changes between projects) ----
+APP="comebackwindow"
+BIN="build/comebackwindow"                     # build output, relative to the repo root
+SUMMARY="Windows-style shortcuts, Aero Peek and a Show Desktop strip for KDE Plasma 6"
+LICENSE_ID="MIT"
+WINDOWS_SUPPORTED="no"                         # Linux-only (KDE Plasma 6 / Wayland)
+ICON="assets/comebackwindow.svg"
+VERSION="${VERSION:-$(sed -n 's/^#define CBW_VERSION "\(.*\)"/\1/p' "$(dirname "${BASH_SOURCE[0]}")/src/version.h" 2>/dev/null || echo 0.1.0)}"
+
+# ---- locate the repository root (resolves symlinks) ----
+resolve_root() {
+  local src="${BASH_SOURCE[0]}"
+  while [ -L "$src" ]; do
+    local dir
+    dir="$(cd -P "$(dirname "$src")" && pwd)"
+    src="$(readlink "$src")"
+    [[ "$src" != /* ]] && src="$dir/$src"
+  done
+  cd -P "$(dirname "$src")" && pwd
+}
+ROOT="$(resolve_root)"
+DIST="$ROOT/build/dist"
+STAGE="$ROOT/build/.stage"
+CACHE="$ROOT/build/.cache"
+
+die() { echo "ERROR: $*" >&2; exit 1; }
+
+host_arch() {
+  case "$(uname -m)" in
+    x86_64|amd64) echo x86_64 ;;
+    aarch64|arm64) echo aarch64 ;;
+    *) die "Unsupported host architecture: $(uname -m)" ;;
+  esac
+}
+ARCHS_DEFAULT="$(host_arch)"
+
+check_tools() {
+  local missing=""
+  for t in make cc pkg-config; do
+    command -v "$t" >/dev/null 2>&1 || missing="$missing $t"
+  done
+  [ -z "$missing" ] || die "Missing build tools:$missing"
+}
+
+# =====================================================================
+# Run mode: start the unbuilt app straight from source
+# =====================================================================
+run_app() {
+  check_tools
+  cd "$ROOT"
+  make -s
+  # exec replaces this shell, so Ctrl+C reaches the app directly.
+  exec "$ROOT/$BIN" "$@"
+}
+
+# =====================================================================
+# Install / uninstall the bare `comebackwindow` command
+# =====================================================================
+WRAPPER_MARK="# comebackwindow-wrapper"
+
+do_install() {
+  local bindir="$HOME/.local/bin"
+  mkdir -p "$bindir"
+  printf '#!/usr/bin/env bash\n%s\nexec "%s/%s" --build "$@"\n' \
+    "$WRAPPER_MARK" "$ROOT" "$APP" > "$bindir/$APP"
+  chmod +x "$bindir/$APP"
+  echo "Installed: $bindir/$APP"
+  case ":$PATH:" in
+    *":$bindir:"*) echo "Done. Type '$APP' in any folder to open the build menu." ;;
+    *)
+      echo "NOTE: $bindir is not in PATH. Add this line to ~/.bashrc:"
+      echo '  export PATH="$HOME/.local/bin:$PATH"'
+      echo "Then open a new terminal or run: source ~/.bashrc"
+      ;;
+  esac
+}
+
+do_uninstall() {
+  local f="$HOME/.local/bin/$APP"
+  if [ -f "$f" ] && grep -q "$WRAPPER_MARK" "$f"; then
+    rm -f "$f"
+    echo "Removed: $f"
+  else
+    echo "Nothing to remove."
+  fi
+}
+
+# =====================================================================
+# Helpers
+# =====================================================================
+banner() {
+  echo "=============================================="
+  echo "  $APP build tool  v$VERSION"
+  echo "=============================================="
+}
+
+list_targets() {
+  echo "linux   : appimage | targz | rpm | source | binary | all"
+  echo "arch    : x86_64 | aarch64 | all (default: native host)"
+}
+
+usage() {
+  banner
+  echo
+  echo "Usage:"
+  echo "  $APP                          Interactive build menu"
+  echo "  $APP <os> <format> [arch]     Build directly"
+  echo "  $APP --list                   List targets"
+  echo
+  list_targets
+}
+
+asset() { echo "$DIST/$APP-$VERSION-$1-$2.$3"; }
+
+# build_native <output>: compile on this host and copy the binary out.
+build_native() {
+  local out="$1" arch="$2"
+
+  [ "$arch" = "$ARCHS_DEFAULT" ] \
+    || die "Cross-building $arch on $(uname -m) is not supported; run on an $arch host (CI does this)."
+  echo "==> Compiling linux/$arch"
+  ( cd "$ROOT" && make -s )
+  mkdir -p "$(dirname "$out")"
+  cp "$ROOT/$BIN" "$out"
+}
+
+# =====================================================================
+# Linux
+# =====================================================================
+fetch() { # fetch <url> <dest>
+  local url="$1" dest="$2"
+  [ -s "$dest" ] && return 0
+  rm -f "$dest"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fL --retry 3 --retry-delay 2 --connect-timeout 15 --max-time 180 "$url" -o "$dest" || rm -f "$dest"
+  fi
+  if [ ! -s "$dest" ] && command -v wget >/dev/null 2>&1; then
+    wget -O "$dest" "$url" || rm -f "$dest"
+  fi
+  [ -s "$dest" ] || die "Download failed: $url"
+  chmod +x "$dest"
+}
+
+# stage_install <destdir>: install the app into a relocatable tree.
+stage_install() {
+  local dest="$1"
+  rm -rf "$dest"
+  ( cd "$ROOT" && make -s install DESTDIR="$dest" PREFIX=/usr )
+}
+
+linux_appimage() {
+  local arch="$1" appdir="$STAGE/$APP-$arch.AppDir"
+  local tool="$CACHE/appimagetool-$arch" runtime="$CACHE/runtime-$arch"
+  mkdir -p "$CACHE"
+
+  [ "$arch" = "$ARCHS_DEFAULT" ] \
+    || die "AppImage for $arch must be built on an $arch host (CI does this)."
+
+  if command -v appimagetool >/dev/null 2>&1; then
+    tool="$(command -v appimagetool)"
+  else
+    fetch "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$arch.AppImage" "$tool"
+  fi
+  fetch "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$arch" "$runtime"
+
+  stage_install "$appdir"
+
+  cat > "$appdir/AppRun" << APPRUN
+#!/bin/sh
+HERE="\$(dirname "\$(readlink -f "\$0")")"
+export APPDIR="\$HERE"
+exec "\$HERE/usr/bin/$APP" "\$@"
+APPRUN
+  chmod +x "$appdir/AppRun"
+
+  cat > "$appdir/$APP.desktop" << DESKTOP
+[Desktop Entry]
+Name=Come Back Window
+Comment=$SUMMARY
+Exec=$APP
+Icon=$APP
+Terminal=false
+Type=Application
+Categories=Utility;
+DESKTOP
+  cp "$appdir/usr/share/icons/hicolor/256x256/apps/$APP.png" "$appdir/$APP.png"
+  ln -sf "$APP.png" "$appdir/.DirIcon"
+
+  mkdir -p "$DIST"
+  local out
+  out="$(asset linux "$arch" AppImage)"
+  rm -f "$out"
+  ( cd "$STAGE" && "$tool" --appimage-extract >/dev/null 2>&1 || true )
+  if [ -x "$STAGE/squashfs-root/AppRun" ]; then
+    ARCH="$arch" "$STAGE/squashfs-root/AppRun" --runtime-file "$runtime" -n "$appdir" "$out"
+    rm -rf "$STAGE/squashfs-root"
+  else
+    ARCH="$arch" "$tool" --runtime-file "$runtime" -n "$appdir" "$out"
+  fi
+  echo "==> $out"
+}
+
+linux_targz() {
+  local arch="$1" name="$APP-$VERSION-linux-$arch" dir
+  dir="$STAGE/$name"
+  stage_install "$dir"
+  cp "$ROOT/README.md" "$ROOT/LICENSE" "$dir/" 2>/dev/null || true
+  mkdir -p "$DIST"
+  tar -C "$STAGE" -czf "$(asset linux "$arch" tar.gz)" "$name"
+  echo "==> $(asset linux "$arch" tar.gz)"
+}
+
+linux_rpm() {
+  local arch="$1" top="$STAGE/rpm-$arch" ver
+  command -v rpmbuild >/dev/null 2>&1 || die "rpmbuild not found (sudo dnf install rpm-build)."
+  ver="${VERSION%%-*}"
+  rm -rf "$top"
+  mkdir -p "$top"/{BUILD,RPMS,SOURCES,SPECS,SRPMS} "$DIST"
+  stage_install "$top/SOURCES/root"
+  {
+    echo "%global debug_package %{nil}"
+    echo "Name: $APP"
+    echo "Version: $ver"
+    echo "Release: 1"
+    echo "Summary: $SUMMARY"
+    echo "License: $LICENSE_ID"
+    echo "BuildArch: $arch"
+    echo "AutoReqProv: no"
+    echo "%description"
+    echo "$SUMMARY"
+    echo "%install"
+    echo "cp -a %{_sourcedir}/root/. %{buildroot}/"
+    echo "%files"
+    echo "/usr/bin/$APP"
+    echo "/usr/share/$APP"
+    echo "/usr/share/applications/org.comebackwindow.App.desktop"
+    echo "/usr/share/metainfo/org.comebackwindow.App.metainfo.xml"
+    echo "/usr/share/icons/hicolor"
+    echo "/usr/share/locale"
+  } > "$top/SPECS/$APP.spec"
+  rpmbuild --define "_topdir $top" --target "$arch" -bb "$top/SPECS/$APP.spec" >/dev/null
+  cp "$top/RPMS/$arch/"*.rpm "$(asset linux "$arch" rpm)"
+  echo "==> $(asset linux "$arch" rpm)"
+}
+
+linux_binary() {
+  local arch="$1"
+  mkdir -p "$DIST"
+  build_native "$(asset linux "$arch" bin)" "$arch"
+  echo "==> $(asset linux "$arch" bin)"
+}
+
+linux_source() {
+  mkdir -p "$DIST"
+  ( cd "$ROOT" && git archive --format=tar.gz --prefix="$APP-$VERSION/" \
+      -o "$DIST/$APP-$VERSION-source.tar.gz" HEAD )
+  echo "==> $DIST/$APP-$VERSION-source.tar.gz"
+}
+
+# =====================================================================
+# Dispatch
+# =====================================================================
+build_target() {
+  local os="$1" fmt="$2" archsel="${3:-all}" archs a f
+  check_tools
+  mkdir -p "$STAGE" "$DIST"
+  banner
+  echo "Target: os=$os format=$fmt arch=$archsel version=$VERSION"
+  echo
+
+  if [ "$archsel" = "all" ]; then archs="$ARCHS_DEFAULT"; else archs="$archsel"; fi
+
+  case "$os" in
+    linux)
+      [ "$fmt" = "all" ] && fmt="appimage targz rpm source"
+      for f in $fmt; do
+        case "$f" in
+          source) linux_source ;;
+          appimage|targz|rpm|binary) for a in $archs; do "linux_$f" "$a"; done ;;
+          *) die "Unknown linux format: $f (valid: appimage | targz | rpm | source | binary | all)" ;;
+        esac
+      done
+      ;;
+    windows)
+      die "This project is Linux-only; Windows builds are disabled."
+      ;;
+    *) die "Unknown OS: $os (valid: linux)" ;;
+  esac
+
+  ( cd "$DIST" && rm -f SHA256SUMS && sha256sum -- * > SHA256SUMS )
+  echo
+  echo "Done. Assets are in build/dist/ (SHA256SUMS included)."
+}
+
+interactive() {
+  local os fmt
+  banner
+  echo
+  echo "Select target operating system:"
+  os="linux"
+  echo "  (Linux only)"
+
+  echo
+  echo "Select package format:"
+  select c in "All (AppImage, tar.gz, rpm, source)" "AppImage" "tar.gz" "rpm" "Source code" "Binary only" "Cancel"; do
+    case "$REPLY" in
+      1) fmt="all"; break ;;
+      2) fmt="appimage"; break ;;
+      3) fmt="targz"; break ;;
+      4) fmt="rpm"; break ;;
+      5) fmt="source"; break ;;
+      6) fmt="binary"; break ;;
+      7|"") echo "Cancelled."; exit 0 ;;
+      *) echo "Invalid choice." ;;
+    esac
+  done
+  build_target "$os" "$fmt" all
+}
+
+build_main() {
+  case "${1:-}" in
+    "") interactive ;;
+    -h|--help|help) usage ;;
+    -l|--list|list) list_targets ;;
+    linux)
+      [ $# -ge 2 ] || { echo "Format missing."; list_targets; exit 1; }
+      build_target "$1" "$2" "${3:-all}"
+      ;;
+    *) echo "Unknown command: $1"; echo; usage; exit 1 ;;
+  esac
+}
+
+# ---- entry point ----
+case "${1:-}" in
+  --build)     shift; build_main "$@" ;;
+  --install)   do_install ;;
+  --uninstall) do_uninstall ;;
+  *)           run_app "$@" ;;   # "./comebackwindow" (+ any app arguments)
+esac
