@@ -61,8 +61,9 @@ cd ComeBackWindow
 ./comebackwindow --install
 ```
 
-`--install` is a one-time step that lets you type `comebackwindow` (no `./`)
-to open the build menu:
+`--install` is a one-time step: it adds **Come Back Window** to the
+application launcher (with its icon) and lets you type `comebackwindow`
+(no `./`) to open the build menu:
 
 ```bash
 comebackwindow

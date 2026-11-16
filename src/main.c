@@ -337,6 +337,8 @@ static gboolean startup_components(Run *run)
     start_tray(run);
     if (run->opts.mode == CBW_MODE_SETUP) {
         dialogs_open_setup(&run->app);
+    } else if (run->opts.mode == CBW_MODE_SETTINGS) {
+        dialogs_open_settings(&run->app);
     } else {
         dialogs_open_setup_if_needed(&run->app);
     }

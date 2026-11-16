@@ -82,6 +82,54 @@ run_app() {
 # Install / uninstall the bare `comebackwindow` command
 # =====================================================================
 WRAPPER_MARK="# comebackwindow-wrapper"
+DESKTOP_FILE="$HOME/.local/share/applications/org.comebackwindow.App.desktop"
+ICONS_DIR="$HOME/.local/share/icons/hicolor"
+ICON_SIZES_LOCAL="16 22 24 32 48 64 128 256"
+
+refresh_caches() {
+  command -v update-desktop-database >/dev/null 2>&1 \
+    && update-desktop-database "$HOME/.local/share/applications" >/dev/null 2>&1 || true
+  command -v gtk-update-icon-cache >/dev/null 2>&1 \
+    && gtk-update-icon-cache -f -t "$ICONS_DIR" >/dev/null 2>&1 || true
+  command -v kbuildsycoca6 >/dev/null 2>&1 && kbuildsycoca6 >/dev/null 2>&1 || true
+}
+
+install_desktop() {
+  mkdir -p "$(dirname "$DESKTOP_FILE")"
+  cat > "$DESKTOP_FILE" << DESKTOP
+[Desktop Entry]
+Type=Application
+Name=Come Back Window
+Comment=$SUMMARY
+Exec="$ROOT/$APP" --settings
+Icon=$APP
+Terminal=false
+Categories=Utility;
+Keywords=desktop;window;shortcut;peek;shake;
+StartupNotify=false
+DESKTOP
+
+  make -s -C "$ROOT" icons >/dev/null 2>&1 || true
+  if [ -f "$ROOT/assets/$APP.svg" ]; then
+    install -Dm644 "$ROOT/assets/$APP.svg" "$ICONS_DIR/scalable/apps/$APP.svg"
+  fi
+  for s in $ICON_SIZES_LOCAL; do
+    [ -f "$ROOT/assets/$APP-$s.png" ] \
+      && install -Dm644 "$ROOT/assets/$APP-$s.png" "$ICONS_DIR/${s}x${s}/apps/$APP.png"
+  done
+  refresh_caches
+  echo "Added to the application launcher: Come Back Window"
+}
+
+remove_desktop() {
+  rm -f "$DESKTOP_FILE"
+  rm -f "$ICONS_DIR/scalable/apps/$APP.svg"
+  for s in $ICON_SIZES_LOCAL; do
+    rm -f "$ICONS_DIR/${s}x${s}/apps/$APP.png"
+  done
+  refresh_caches
+  echo "Removed from the application launcher."
+}
 
 do_install() {
   local bindir="$HOME/.local/bin"
@@ -90,6 +138,7 @@ do_install() {
     "$WRAPPER_MARK" "$ROOT" "$APP" > "$bindir/$APP"
   chmod +x "$bindir/$APP"
   echo "Installed: $bindir/$APP"
+  install_desktop
   case ":$PATH:" in
     *":$bindir:"*) echo "Done. Type '$APP' in any folder to open the build menu." ;;
     *)
@@ -106,8 +155,9 @@ do_uninstall() {
     rm -f "$f"
     echo "Removed: $f"
   else
-    echo "Nothing to remove."
+    echo "No command wrapper to remove."
   fi
+  remove_desktop
 }
 
 # =====================================================================
