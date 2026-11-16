@@ -50,6 +50,10 @@ desktop_shown() {
         showingDesktop 2>/dev/null | awk '{print $2}'
 }
 
+desktop_is() {
+    [ "$(desktop_shown)" = "$1" ]
+}
+
 state_value() { # $1: JSON alanı (dizi uzunluğu)
     "$APP" --dump-state 2>/dev/null | python3 -c \
         'import json,sys; d=json.load(sys.stdin); print(len(d.get(sys.argv[1], [])))' "$1"
@@ -132,9 +136,9 @@ say "PASS RestoreAll"
 
 say "== masaüstü aç/kapat =="
 "$APP" --toggle-desktop >/dev/null 2>&1
-wait_for '[ "$(desktop_shown)" = "true" ]' || fail "masaüstü gösterilemedi"
+wait_for "desktop_is true" || fail "masaüstü gösterilemedi"
 "$APP" --toggle-desktop >/dev/null 2>&1
-wait_for '[ "$(desktop_shown)" = "false" ]' || fail "masaüstü geri getirilemedi"
+wait_for "desktop_is false" || fail "masaüstü geri getirilemedi"
 say "PASS ToggleDesktop (aç/kapat)"
 
 say "== kapanış =="
