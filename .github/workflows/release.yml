@@ -50,6 +50,16 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN=1 \
             "./build/dist/comebackwindow-${ver}-linux-${{ matrix.arch }}.AppImage" --version
 
+      - name: Verify AppImage contents
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          img="./build/dist/comebackwindow-${ver}-linux-${{ matrix.arch }}.AppImage"
+          "$img" --appimage-extract >/dev/null
+          test -f squashfs-root/usr/share/comebackwindow/kwin/contents/ui/main.qml
+          test -f squashfs-root/usr/share/locale/en/LC_MESSAGES/comebackwindow.mo
+          test -f squashfs-root/comebackwindow.png
+          rm -rf squashfs-root
+
       - name: Verify tar.gz
         run: |
           ver="${GITHUB_REF_NAME#v}"
