@@ -274,6 +274,8 @@ static Settings form_read(const Form *form, const Settings *base)
     s.language = NULL;
     s.strip_style = NULL;
     s.strip_text = NULL;
+    s.strip_color = NULL;
+    s.strip_text_color = NULL;
     guint selected = form->language != NULL
         ? gtk_drop_down_get_selected(GTK_DROP_DOWN(form->language)) : 0;
 
