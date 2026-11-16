@@ -1,5 +1,5 @@
 Name:           comebackwindow
-Version:        1.0.2
+Version:        1.0.3
 Release:        1%{?dist}
 Summary:        Windows-style window shortcuts for KDE Plasma 6
 
@@ -64,3 +64,6 @@ make check
 
 * Mon Nov 16 2026 Come Back Window contributors - 1.0.2-1
 - Find KWin data next to the build output
+
+* Mon Nov 16 2026 Come Back Window contributors - 1.0.3-1
+- Standard icon source, macOS-style screenshots and two-column settings
