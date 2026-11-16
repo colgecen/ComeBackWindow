@@ -2,11 +2,6 @@
 
 <p align="center">Windows-style window shortcuts, Aero Peek and a Show Desktop strip for KDE Plasma 6 on Wayland.</p>
 
-<p align="center">
-  <img src="docs/img/license.svg" alt="License">
-  <img src="docs/img/ai-generated.svg" alt="AI generated">
-</p>
-
 ## Screenshots
 
 <p align="center">
