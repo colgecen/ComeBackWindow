@@ -47,7 +47,7 @@ make check
 
 %files -f %{name}.lang
 %license LICENSE
-%doc README.md docs/KARARLAR.md
+%doc README.md
 %{_bindir}/comebackwindow
 %{_datadir}/comebackwindow/
 %{_datadir}/applications/org.comebackwindow.App.desktop

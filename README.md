@@ -1,90 +1,89 @@
-# Come Back Window
+<h1 align="center">Come Back Window</h1>
 
-![Come Back Window](assets/cover.png)
+<p align="center">Windows-style window shortcuts, Aero Peek and a Show Desktop strip for KDE Plasma 6 on Wayland.</p>
 
-Windows tarzı pencere kısayolları, Aero Peek, Aero Shake ve "Masaüstünü Göster"
-şeridi — KDE Plasma 6 (Wayland) için.
+<p align="center">
+  <img src="docs/img/license.svg" alt="License">
+  <img src="docs/img/ai-generated.svg" alt="AI generated">
+</p>
 
-Come Back Window, Windows'ta alışık olduğunuz pencere davranışlarını KDE
-Plasma 6'ya taşır:
+## Screenshots
 
-- Masaüstünü göster / geri getir (Meta+D, Meta+M)
-- Aktif pencereyi küçült, büyüt, eski boyuta getir, kapat
-- Aktif hariç hepsini küçült (Meta+Home) ve geri getir (Meta+Shift+M)
-- Görev çubuğunun en sağındaki ince "Masaüstünü Göster" şeridi
-- İsteğe bağlı yazı modu: köşedeki şeride kendi metninizi yazın (dikey,
-  tam sığar), üzerine gelince yalnız yazı görünür
-- Şerit ve yazı için renk ve saydamlık ayarları
-- Aero Peek: şeridin üstünde beklerseniz pencereler şeffaflaşır
-- Aero Shake: pencereyi sallayınca diğerleri küçülür (varsayılan kapalı)
-- Geri oku logosu, Türkçe/İngilizce arayüz, ilk açılış penceresi
+<p align="center">
+  <img src="docs/img/app-strip.svg" alt="Come Back Window Show Desktop strip" width="260">
+</p>
 
-## Kısayollar
+<p align="center">
+  <img src="docs/img/app-settings.svg" alt="Come Back Window settings" width="800">
+</p>
 
-| İşlev | Kısayol |
-|---|---|
-| Masaüstünü göster / geri getir | Meta+D, Meta+M |
-| Aktif pencereyi küçült (büyükse eski boyuta) | Meta+Aşağı |
-| Büyüt / eski haline getir | Meta+Yukarı |
-| Aktif hariç hepsini küçült (aç/kapat) | Meta+Home |
-| Küçültülenleri geri getir | Meta+Shift+M |
-| Pencereyi kapat | Alt+F4 |
-| Aero Shake | Pencereyi başlıktan tutup salla (ayarlardan açılır) |
+### Regenerating the screenshots
 
-## Mimari
-
-- `comebackwindow` (C11, tek süreç, GLib `GMainLoop`):
-  GTK4 ilk açılış/ayar pencereleri, StatusNotifierItem tepsi, dbusmenu,
-  Wayland layer-shell (veya X11 dock) köşe şeridi, Aero Peek zamanlayıcısı,
-  yapılandırma/autostart/kısayol yönetimi ve `org.comebackwindow.App` D-Bus
-  servisi.
-- `kwin/` (QML + saf JS): KWin içinde kısayollar, pencere işlemleri, panel
-  geometrisi, Aero Peek opaklık animasyonu ve Aero Shake algılama. Mantık
-  `kwin/contents/code/logic.js` içinde KWin'den bağımsız tutulur ve `node
-  --test` ile test edilir.
-
-Uygulama ile betik arasındaki komut kanalı birincil olarak
-`org.kde.kglobalaccel` `/component/kwin` `invokeShortcut` üzerinden çalışır;
-başarısız olursa betik `PollCommands()` yoklamasına geçer. Ayrıntılar:
-`docs/KARARLAR.md`.
-
-## Derleme ve kurulum
+The screenshots come from the **real application windows**: no mock-ups and
+no hand-drawn UI, so the README cannot drift away from the app. One command
+regenerates them:
 
 ```bash
-make deps-check
-make
-sudo make install
+python3 scripts/make_screenshots.py
 ```
 
-Gereksinimler (Fedora):
+Output goes to `docs/img/`. Commit the SVGs: they stay sharp when zoomed and
+produce readable diffs.
+
+#### How it works
+
+The script starts a throwaway instance with a demo configuration (English UI,
+text strip), opens the real settings window, and captures the actual windows
+through KDE Spectacle. The PNG bytes are then embedded in a lightweight SVG
+wrapper. Requirements: a KDE Plasma session, `spectacle` and ImageMagick. Stop
+any running instance first.
+
+## Features
+
+- Show Desktop toggle: `Meta+D`, `Meta+M`, tray menu, or the corner strip
+- Window shortcuts: minimize, maximize, close, minimize others, restore all
+- Show Desktop strip pinned to the bottom-right corner and aware of the panel
+- Optional text mode: vertical label with custom text, color and opacity
+- Aero Peek: windows fade while the pointer rests on the strip
+- Aero Shake: shake a window to minimize the others (off by default)
+- Tray icon with an eight-item menu
+- GTK4 settings window and first-run wizard
+- Turkish and English interface
+- KDE Plasma 6 on Wayland; an X11 fallback strip is included
+
+## Installation
+
+Build and run from source:
 
 ```bash
-sudo dnf install gcc make pkgconf-pkg-config glib2-devel gtk4-devel \
-  wayland-devel wayland-protocols-devel libX11-devel gettext \
-  librsvg2-tools desktop-file-utils libappstream-glib appstream nodejs
+git clone https://github.com/colgecen/ComeBackWindow.git
+cd ComeBackWindow
+./comebackwindow --install
 ```
 
-Arch:
+`--install` is a one-time step that lets you type `comebackwindow` (no `./`)
+to open the build menu:
 
 ```bash
-sudo pacman -S --needed base-devel glib2 gtk4 wayland wayland-protocols \
-  libx11 gettext librsvg desktop-file-utils appstream nodejs
+comebackwindow
 ```
 
-## Test
+Prebuilt packages are available on the
+[Releases](https://github.com/colgecen/ComeBackWindow/releases) page.
+
+## Usage
+
+Run the app straight from source (press `Ctrl+C` to stop):
 
 ```bash
-make check              # lint + birim + JS + doğrulama
-make test-asan          # ASan/UBSan
-make test-valgrind      # valgrind (kuruluysa)
-make test-integration   # gerçek KWin oturumunda uçtan uca
-tools/check-all.sh      # hepsini sırayla çalıştırır
+./comebackwindow
 ```
 
-Manuel test listesi: `docs/MANUEL-TEST.md`. Test raporu:
-`docs/TEST-RAPORU.md`. Kabul listesi: `docs/KABUL-TESTLERI.md`.
-Sürüm notları: `CHANGELOG.md`.
+The first start opens the setup wizard. Use the tray icon or
+`./comebackwindow --settings` to change the strip style, text, colors and
+opacity, Aero Peek/Shake and autostart. Configuration lives in
+`~/.config/comebackwindow/config.ini`.
 
-## Lisans
+## License
 
-MIT — bkz. `LICENSE`.
+This project is licensed under the [MIT](LICENSE) license.

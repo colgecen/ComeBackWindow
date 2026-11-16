@@ -432,7 +432,7 @@ static GtkWidget *build_settings_window(SettingsDialog *dialog)
     GtkWidget *scroll = gtk_scrolled_window_new();
 
     gtk_window_set_title(GTK_WINDOW(window), _("Come Back Window — Ayarlar"));
-    gtk_window_set_default_size(GTK_WINDOW(window), 540, 640);
+    gtk_window_set_default_size(GTK_WINDOW(window), 560, 880);
     add_heading(box, _("<b>Ayarlar</b>"),
                 _("Değişiklikler Kaydet'e basınca uygulanır."));
     add_general_fields(box, &dialog->form, s);
