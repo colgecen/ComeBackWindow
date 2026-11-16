@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  assets:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential pkg-config \
+            libglib2.0-dev libgtk-4-dev libwayland-dev libx11-dev \
+            libcairo2-dev libpango1.0-dev gettext nodejs \
+            desktop-file-utils appstream imagemagick rpm
+
+      - name: Build
+        run: make -j"$(nproc)"
+
+      - name: Build AppImage
+        run: VERSION="${GITHUB_REF_NAME#v}" ./comebackwindow --build linux appimage ${{ matrix.arch }}
+
+      - name: Build tar.gz
+        run: VERSION="${GITHUB_REF_NAME#v}" ./comebackwindow --build linux targz ${{ matrix.arch }}
+
+      - name: Build rpm
+        run: VERSION="${GITHUB_REF_NAME#v}" ./comebackwindow --build linux rpm ${{ matrix.arch }}
+
+      - name: Verify AppImage
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          APPIMAGE_EXTRACT_AND_RUN=1 \
+            "./build/dist/comebackwindow-${ver}-linux-${{ matrix.arch }}.AppImage" --version
+
+      - name: Verify tar.gz
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          mkdir -p /tmp/verify
+          tar -xzf "./build/dist/comebackwindow-${ver}-linux-${{ matrix.arch }}.tar.gz" -C /tmp/verify
+          "/tmp/verify/comebackwindow-${ver}-linux-${{ matrix.arch }}/usr/bin/comebackwindow" --version
+
+      - name: Verify rpm
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          rpm -qpl "./build/dist/comebackwindow-${ver}-linux-${{ matrix.arch }}.rpm" \
+            | grep -q "/usr/bin/comebackwindow"
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: assets-${{ matrix.arch }}
+          path: build/dist/*
+          if-no-files-found: error
+
+  release:
+    needs: assets
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download assets
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Source archive
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          mkdir -p dist
+          git archive --format=tar.gz \
+            --prefix="comebackwindow-${ver}/" \
+            -o "dist/comebackwindow-${ver}-source.tar.gz" HEAD
+
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum -- * > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pre=""
+          case "$GITHUB_REF_NAME" in
+            *-*) pre="--prerelease" ;;
+          esac
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes $pre
