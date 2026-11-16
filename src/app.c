@@ -83,11 +83,22 @@ gchar *app_data_dir(void)
     }
     gchar *local = exe_dir();
 
-    if (local != NULL && has_kwin_script(local)) {
-        g_free(installed);
-        return local;
+    if (local != NULL) {
+        if (has_kwin_script(local)) {
+            g_free(installed);
+            return local;
+        }
+        /* Derleme çıktısı build/ altındaysa veri kökte bir üst dizindedir. */
+        gchar *parent = g_path_get_dirname(local);
+
+        if (has_kwin_script(parent)) {
+            g_free(local);
+            g_free(installed);
+            return parent;
+        }
+        g_free(parent);
+        g_free(local);
     }
-    g_free(local);
     return installed;
 }
 

@@ -74,6 +74,8 @@ run_app() {
   check_tools
   cd "$ROOT"
   make -s
+  # Development data (KWin script, icons) lives in the repository root.
+  export CBW_DATA_DIR="$ROOT"
   # exec replaces this shell, so Ctrl+C reaches the app directly.
   exec "$ROOT/$BIN" "$@"
 }
