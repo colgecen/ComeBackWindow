@@ -90,17 +90,35 @@ static GVariant *build_pixmap(void)
         CAIRO_FORMAT_ARGB32, size, size);
     cairo_t *cr = cairo_create(surface);
 
-    cairo_set_source_rgba(cr, 0.24, 0.68, 0.91, 1.0);
-    cairo_rectangle(cr, 0, 0, size, size);
-    cairo_fill(cr);
+    /* Kullanicinin sagladigi simge: beyaz yuvarlatilmis kare + geri oku. */
+    cairo_set_source_rgba(cr, 0, 0, 0, 0);
+    cairo_paint(cr);
+    gdouble r = 4.5;
+
+    cairo_new_sub_path(cr);
+    cairo_arc(cr, 0.5 + r, 0.5 + r, r, G_PI, 1.5 * G_PI);
+    cairo_arc(cr, size - 0.5 - r, 0.5 + r, r, 1.5 * G_PI, 2.0 * G_PI);
+    cairo_arc(cr, size - 0.5 - r, size - 0.5 - r, r, 0, 0.5 * G_PI);
+    cairo_arc(cr, 0.5 + r, size - 0.5 - r, r, 0.5 * G_PI, G_PI);
+    cairo_close_path(cr);
     cairo_set_source_rgba(cr, 1, 1, 1, 1);
-    cairo_set_line_width(cr, 2.6);
-    cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
-    cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
-    cairo_move_to(cr, 13.5, 5.5);
-    cairo_line_to(cr, 7.5, 11);
-    cairo_line_to(cr, 13.5, 16.5);
+    cairo_fill(cr);
+
+    cairo_save(cr);
+    cairo_scale(cr, size / 256.0, size / 256.0);
+    cairo_set_source_rgba(cr, 0.07, 0.07, 0.07, 1.0);
+    cairo_set_line_width(cr, 30.0);
+    cairo_move_to(cr, 52, 190);
+    cairo_line_to(cr, 166, 190);
+    cairo_arc(cr, 166, 156, 34, 0.5 * G_PI, -0.5 * G_PI);
+    cairo_line_to(cr, 104, 122);
     cairo_stroke(cr);
+    cairo_move_to(cr, 40, 122);
+    cairo_line_to(cr, 106, 84);
+    cairo_line_to(cr, 106, 160);
+    cairo_close_path(cr);
+    cairo_fill(cr);
+    cairo_restore(cr);
     cairo_destroy(cr);
     cairo_surface_flush(surface);
 

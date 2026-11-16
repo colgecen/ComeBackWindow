@@ -140,18 +140,29 @@ assets/cover.png: assets/comebackwindow-256.png
 	  -gravity NorthWest -annotate +432+355 'KDE Plasma 6 · Wayland' \
 	  $@
 
-assets/comebackwindow-%.png: assets/comebackwindow.svg
-ifeq ($(shell command -v rsvg-convert 2>/dev/null),)
-	@echo "rsvg-convert bulunamadı, ImageMagick ile üretiliyor (rsvg2-tools önerilir)"
-	convert -background none -density 384 $< -resize $*x$* $@
-else
-	rsvg-convert -w $* -h $* -o $@ $<
-endif
+# Simgeler kullanicinin sagladigi JPEG'den uretilir; koseler yuvarlatilir.
+assets/comebackwindow-%.png: assets/comeback.jpg
+	@size=$*; radius=$$((size * 22 / 100)); \
+	tool=$$(command -v magick 2>/dev/null || command -v convert); \
+	$$tool "$<" -resize "$$((size * 84 / 100))x$$((size * 84 / 100))" \
+	  -background none -gravity center -extent "$${size}x$${size}" -alpha set \
+	  \( -size "$${size}x$${size}" xc:none -fill white \
+	     -draw "roundrectangle 0,0,$$((size - 1)),$$((size - 1)),$$radius,$$radius" \) \
+	  -compose DstIn -composite "$@"
 
 po/%.mo: po/%.po
 	msgfmt --check -o $@ $<
 
-mo: $(patsubst %.po,%.mo,$(wildcard po/*.po))
+MO_FILES := $(wildcard po/*.po)
+MO_BINS := $(patsubst po/%.po,po/%.mo,$(MO_FILES))
+LOCALE_TREE := $(BUILD)/locale
+LOCALE_MO := $(patsubst po/%.po,$(LOCALE_TREE)/%/LC_MESSAGES/comebackwindow.mo,$(MO_FILES))
+
+mo: $(MO_BINS) $(LOCALE_MO)
+
+$(LOCALE_TREE)/%/LC_MESSAGES/comebackwindow.mo: po/%.po
+	@mkdir -p $(dir $@)
+	msgfmt --check -o $@ $<
 
 lint: all
 	@set -e; \
