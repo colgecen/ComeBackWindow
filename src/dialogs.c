@@ -265,37 +265,6 @@ static GtkWidget *add_effect_fields(GtkWidget *box, Form *form,
     return box;
 }
 
-/* Ayarlar penceresi: alanlar 900x564 pencerede iki sutuna dengeli dagilir. */
-static void add_settings_columns(GtkWidget *left, GtkWidget *right, Form *form,
-                                 const Settings *s)
-{
-    form->autostart = add_switch(left, _("Oturum açılışında başlat"),
-                                 s->autostart);
-    form->strip = add_switch(left, _("Köşe şeridini göster"), s->strip_enabled);
-    form->strip_width = add_spin(left, _("Şerit genişliği (px)"),
-                                 s->strip_width, 2, 24, 1);
-    form->strip_style = add_strip_style(left, s->strip_style);
-    form->strip_text = add_strip_text(left, s->strip_text);
-    form->strip_color = add_color(left, _("Şerit rengi"), s->strip_color);
-    form->strip_opacity = add_scale(left, _("Şerit opaklığı"),
-                                    s->strip_opacity, 0.0, 1.0, 0.05);
-    form->fallback_height = add_spin(left, _("Panel yoksa yedek yükseklik"),
-                                     s->fallback_height, 20, 120, 2);
-
-    form->strip_text_color = add_color(right, _("Yazı rengi"),
-                                       s->strip_text_color);
-    form->strip_text_opacity = add_scale(right, _("Yazı opaklığı"),
-                                         s->strip_text_opacity, 0.0, 1.0, 0.05);
-    form->peek = add_switch(right, "Aero Peek", s->peek_enabled);
-    form->peek_delay = add_spin(right, _("Peek gecikmesi (ms)"),
-                                s->peek_delay_ms, 100, 2000, 50);
-    form->peek_opacity = add_scale(right, _("Peek opaklığı"), s->peek_opacity,
-                                   0.0, 0.5, 0.01);
-    form->shake = add_switch(right, "Aero Shake", s->shake_enabled);
-    form->tray = add_switch(right, _("Tepsi simgesi"), s->tray_enabled);
-    form->language = add_language(right, s->language);
-}
-
 /* --- Form değerlerini okuma --------------------------------------- */
 
 static Settings form_read(const Form *form, const Settings *base)
@@ -462,20 +431,14 @@ static GtkWidget *build_settings_window(SettingsDialog *dialog)
     Settings *s = &dialog->app->settings;
     GtkWidget *window = gtk_window_new();
     GtkWidget *outer = page_box();
-    GtkWidget *columns = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 28);
-    GtkWidget *left = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
-    GtkWidget *right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
 
     gtk_window_set_title(GTK_WINDOW(window), _("Come Back Window — Ayarlar"));
-    gtk_window_set_default_size(GTK_WINDOW(window), 900, 564);
+    gtk_window_set_default_size(GTK_WINDOW(window), 560, 820);
     add_heading(outer, _("<b>Ayarlar</b>"),
                 _("Değişiklikler Kaydet'e basınca uygulanır."));
-    add_settings_columns(left, right, &dialog->form, s);
-    gtk_widget_set_hexpand(left, TRUE);
-    gtk_widget_set_hexpand(right, TRUE);
-    gtk_box_append(GTK_BOX(columns), left);
-    gtk_box_append(GTK_BOX(columns), right);
-    gtk_box_append(GTK_BOX(outer), columns);
+    add_general_fields(outer, &dialog->form, s);
+    add_effect_fields(outer, &dialog->form, s);
+    dialog->form.language = add_language(outer, s->language);
     gtk_box_append(GTK_BOX(outer), dialog_buttons(dialog));
     gtk_widget_set_valign(outer, GTK_ALIGN_CENTER);
     gtk_window_set_child(GTK_WINDOW(window), outer);
@@ -642,7 +605,7 @@ static GtkWidget *build_setup_window(SetupDialog *dialog)
     gtk_stack_add_named(GTK_STACK(dialog->stack),
                         setup_effects_page(dialog), "effects");
     gtk_window_set_title(GTK_WINDOW(window), _("Come Back Window — İlk Açılış"));
-    gtk_window_set_default_size(GTK_WINDOW(window), 900, 564);
+    gtk_window_set_default_size(GTK_WINDOW(window), 560, 820);
     gtk_box_append(GTK_BOX(outer), dialog->stack);
     gtk_box_append(GTK_BOX(outer), setup_buttons(dialog));
     gtk_window_set_child(GTK_WINDOW(window), outer);

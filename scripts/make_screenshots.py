@@ -22,8 +22,8 @@ APP = ROOT / "build" / "comebackwindow"
 OUT = ROOT / "docs" / "img"
 TMP = pathlib.Path(tempfile.mkdtemp(prefix="cbw-shot-"))
 DISPLAY = ":97"
-SCREEN = "1000x700x24"
-SHOT_W, SHOT_H = 900, 564
+SCREEN = "1000x900x24"
+SHOT_W, SHOT_H = 560, 820
 FRAME_H = 36
 RADIUS = 10
 
