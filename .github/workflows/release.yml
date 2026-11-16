@@ -67,7 +67,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: assets-${{ matrix.arch }}
-          path: build/dist/*
+          path: |
+            build/dist/*.AppImage
+            build/dist/*.tar.gz
+            build/dist/*.rpm
           if-no-files-found: error
 
   release:
@@ -96,6 +99,7 @@ jobs:
       - name: Checksums
         run: |
           cd dist
+          rm -f SHA256SUMS
           sha256sum -- * > SHA256SUMS
           cat SHA256SUMS
 
