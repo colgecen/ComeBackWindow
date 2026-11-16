@@ -280,6 +280,41 @@ export XDG_DATA_DIRS="\$HERE/usr/share:\${XDG_DATA_DIRS:-/usr/local/share:/usr/s
 export CBW_DATA_DIR="\$HERE/usr/share/comebackwindow"
 export CBW_LOCALE_DIR="\$HERE/usr/share/locale"
 BIN="\$HERE/usr/bin/$APP"
+integrate() {
+  [ -n "\${APPIMAGE:-}" ] || return 0
+  data="\${XDG_DATA_HOME:-\$HOME/.local/share}"
+  apps="\$data/applications"
+  icon_dir="\$data/icons/hicolor/512x512/apps"
+  entry="\$apps/$APP.desktop"
+  mkdir -p "\$apps" "\$icon_dir" 2>/dev/null || return 0
+  changed=0
+  if ! grep -qF "Exec=\"\$APPIMAGE\"" "\$entry" 2>/dev/null; then
+    cat > "\$entry" << DESKTOP
+# comebackwindow-desktop
+[Desktop Entry]
+Type=Application
+Name=Come Back Window
+Comment=Windows-style shortcuts, Aero Peek and a Show Desktop strip for KDE Plasma 6
+Exec="\$APPIMAGE"
+Icon=$APP
+Terminal=false
+Categories=Utility;
+Keywords=desktop;window;shortcut;peek;shake;
+StartupNotify=false
+DESKTOP
+    changed=1
+  fi
+  if [ -f "\$HERE/$APP.png" ] && ! cmp -s "\$HERE/$APP.png" "\$icon_dir/$APP.png"; then
+    cp -f "\$HERE/$APP.png" "\$icon_dir/$APP.png"
+    changed=1
+  fi
+  if [ "\$changed" = "1" ]; then
+    command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "\$apps" >/dev/null 2>&1
+    command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -f -t "\$data/icons/hicolor" >/dev/null 2>&1
+    command -v kbuildsycoca6 >/dev/null 2>&1 && kbuildsycoca6 >/dev/null 2>&1
+  fi
+}
+integrate
 if [ "\${CBW_AUTOSTART:-0}" = "1" ]; then
   exec "\$BIN"
 fi

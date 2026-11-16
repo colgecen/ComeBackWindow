@@ -1,7 +1,7 @@
 /* Sürüm ve kimlik sabitleri */
 #pragma once
 
-#define CBW_VERSION "1.0.4"
+#define CBW_VERSION "1.0.5"
 #define CBW_APP_ID "org.comebackwindow.App"
 #define CBW_OBJECT_PATH "/org/comebackwindow/App"
 #define CBW_DESKTOP_FILE "org.comebackwindow.App.desktop"
