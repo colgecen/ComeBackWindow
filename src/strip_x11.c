@@ -171,12 +171,17 @@ static void x11_update(Strip *strip)
     gint strip_width = app->settings.strip_width > 0
         ? app->settings.strip_width : 6;
 
+    gboolean text_mode = g_strcmp0(app->settings.strip_style, "text") == 0;
+    gint width = strip_effective_width(text_mode,
+                                       app->settings.strip_opacity,
+                                       strip_width);
+
     x11_surfaces_clear(sx);
     for (gsize i = 0; i < app->layout_len; i++) {
         if (app->layout[i].fullscreen) {
             continue;
         }
-        X11Surface *xs = x11_surface_create(sx, &app->layout[i], strip_width);
+        X11Surface *xs = x11_surface_create(sx, &app->layout[i], width);
 
         if (xs != NULL) {
             g_ptr_array_add(sx->surfaces, xs);

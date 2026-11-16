@@ -96,6 +96,13 @@ typedef struct {
     gdouble text_opacity;
 } StripStyle;
 
+/*
+ * Etkin şerit genişliği: yazı modunda gövde tamamen saydamsa yazı iki kat
+ * geniş alanda çizilir (köşeye yapışık kalır).
+ */
+gint strip_effective_width(gboolean text_mode, gdouble opacity,
+                           gint strip_width);
+
 /* "#RRGGBB" çözümler; geçersizse FALSE. */
 gboolean strip_color_parse(const gchar *hex, gdouble *r, gdouble *g,
                            gdouble *b);

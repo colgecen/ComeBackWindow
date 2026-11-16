@@ -36,6 +36,7 @@ dosyasına yazın.
 | 2.9 | Şerit rengi ve opaklığını değiştir | Renk/saydamlık hemen uygulanır |
 | 2.10 | Yazı rengi ve opaklığını değiştir | Yazı rengi/saydamlığı uygulanır |
 | 2.11 | Uzun metin gir | Metin kırpılmadan şeride sığar |
+| 2.12 | Şerit opaklığı 0 yap | Yazı ~2 kat büyür ve sağ alt köşeye yapışır |
 
 ## 3. Kısayollar
 

@@ -807,18 +807,21 @@ static void apply_specs(StripWayland *bw)
         if (spec->fullscreen) {
             continue;           /* tam ekranda şerit gizlenir */
         }
+        gint width = strip_effective_width(spec->text_mode, spec->opacity,
+                                           strip_width);
+
         for (guint j = 0; j < bw->surfaces->len; j++) {
             StripSurface *ts = g_ptr_array_index(bw->surfaces, j);
 
             if (ts->output == find_output(bw, spec->output)
-                && spec_matches(ts, spec, strip_width)) {
+                && spec_matches(ts, spec, width)) {
                 reuse = ts;
                 g_ptr_array_remove_index(bw->surfaces, j);
                 break;
             }
         }
         if (reuse == NULL) {
-            reuse = surface_create(bw, spec, strip_width);
+            reuse = surface_create(bw, spec, width);
             app_log(bw->strip->app, "şerit yüzeyi oluşturuldu");
         } else {
             reuse->text_mode = spec->text_mode;

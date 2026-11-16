@@ -103,3 +103,7 @@ Ek doğrulamalar:
   varsayılana düşer; opaklıklar sıkıştırılır. Yazı modunda metin, şerit
   yüksekliğine sığmazsa yatay olarak sıkıştırılır ("…" kullanılmaz), böylece
   metin her zaman tam görünür.
+- **2026-11-16 — Saydam gövdede büyük yazı:** Yazı modunda gövde
+  opaklığı 0 ise şerit yüzeyi iki kat genişler (2×`strip_width`) ve yazı
+  sağ alt köşeye yapışacak biçimde hizalanır; böylece yazı yaklaşık iki kat
+  büyük görünür. Gövde görünürken yazı şeridin ortasında kalır.

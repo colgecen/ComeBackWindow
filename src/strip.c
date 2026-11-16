@@ -137,6 +137,17 @@ static void text_font_px(cairo_t *cr, gint px)
     cairo_set_font_size(cr, px);
 }
 
+gint strip_effective_width(gboolean text_mode, gdouble opacity,
+                           gint strip_width)
+{
+    gint width = strip_width > 0 ? strip_width : 10;
+
+    if (text_mode && opacity <= 0.0) {
+        return width * 2;
+    }
+    return width;
+}
+
 gboolean strip_color_parse(const gchar *hex, gdouble *r, gdouble *g,
                            gdouble *b)
 {
@@ -231,12 +242,24 @@ static void draw_text_strip(cairo_t *cr, gint width, gint height,
     if (extents.x_advance > max_len && extents.x_advance > 0) {
         fit = max_len / extents.x_advance;
     }
+    /*
+     * Gövde tamamen saydamsa (yalnız yazı) metin sağ alt köşeye yapışır;
+     * aksi hâlde şeridin ortasında durur.
+     */
+    gboolean corner = style->opacity <= 0.0;
+
     cairo_save(cr);
-    cairo_translate(cr, width / 2.0, height / 2.0);
+    if (corner) {
+        cairo_translate(cr, width - 2.0, height - 2.0);
+    } else {
+        cairo_translate(cr, width / 2.0, height / 2.0);
+    }
     cairo_rotate(cr, -M_PI / 2.0);
     cairo_scale(cr, fit, 1.0);
-    gdouble x = -extents.x_bearing - extents.width / 2.0;
-    gdouble y = -(extents.y_bearing + extents.height / 2.0);
+    gdouble x = corner ? -extents.x_bearing
+                       : -extents.x_bearing - extents.width / 2.0;
+    gdouble y = corner ? 0.0
+                       : -(extents.y_bearing + extents.height / 2.0);
 
     cairo_set_source_rgba(cr, 0, 0, 0, 0.55 * style->text_opacity);
     cairo_move_to(cr, x + 1.0, y + 1.0);

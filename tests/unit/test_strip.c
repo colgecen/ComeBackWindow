@@ -125,6 +125,14 @@ static void test_color_parse(void)
     CHECK(style.text_opacity < 0.01);
 }
 
+static void test_effective_width(void)
+{
+    CHECK_INT_EQ(strip_effective_width(TRUE, 0.0, 10), 20);
+    CHECK_INT_EQ(strip_effective_width(TRUE, 0.5, 10), 10);
+    CHECK_INT_EQ(strip_effective_width(FALSE, 0.0, 10), 10);
+    CHECK_INT_EQ(strip_effective_width(TRUE, 0.0, 0), 20);  /* varsayılan 10 */
+}
+
 int main(void)
 {
     test_edge_parse();
@@ -135,6 +143,7 @@ int main(void)
     test_geometry_none_ve_sifir();
     test_geometry_from_entry();
     test_color_parse();
+    test_effective_width();
 
     TEST_MAIN_END();
 }
