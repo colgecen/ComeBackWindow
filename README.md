@@ -12,27 +12,6 @@
   <img src="docs/img/app-setup.svg" alt="Come Back Window setup wizard" width="400">
 </p>
 
-### Regenerating the screenshots
-
-The screenshots come from the **real application windows**: no mock-ups and
-no hand-drawn UI, so the README cannot drift away from the app. One command
-regenerates them:
-
-```bash
-python3 scripts/make_screenshots.py
-```
-
-Output goes to `docs/img/`. Commit the SVGs: they stay sharp when zoomed and
-produce readable diffs.
-
-#### How it works
-
-The script starts throwaway instances with a demo configuration (English UI)
-on a private Xvfb display, opens the real settings window and the first-run
-wizard, and captures them with ImageMagick. Each capture is wrapped in an SVG
-with a macOS-style title bar as window decoration. Requirements: `Xvfb` and
-ImageMagick; the user's desktop is never captured.
-
 ## Features
 
 - Show Desktop toggle: `Meta+D`, `Meta+M`, tray menu, or the corner strip
