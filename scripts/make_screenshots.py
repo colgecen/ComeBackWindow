@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""Generate the README screenshots from the real application UI.
+"""Generate the README screenshots from the real application windows.
 
-The application is C/GTK4, so there is no Rich/Textual console to record.
-Instead this script starts a throwaway instance on a private Xvfb display,
-captures the real windows with ImageMagick, and embeds the PNG bytes in an
-SVG wrapper. Nothing is drawn by hand, and the user's desktop is never
-captured.
+The app is C/GTK4, so there is no Rich/Textual console to record. A throwaway
+instance runs on a private Xvfb display; ImageMagick captures the real
+settings and setup windows, and a macOS-style title bar is added as window
+decoration. The user's desktop is never captured.
 """
 
 import base64
@@ -23,9 +22,12 @@ APP = ROOT / "build" / "comebackwindow"
 OUT = ROOT / "docs" / "img"
 TMP = pathlib.Path(tempfile.mkdtemp(prefix="cbw-shot-"))
 DISPLAY = ":97"
-SCREEN = "1920x1080x24"
+SCREEN = "1000x700x24"
+SHOT_W, SHOT_H = 900, 564
+FRAME_H = 36
+RADIUS = 10
 
-CONFIG = """[comebackwindow]
+BASE_CONFIG = """[comebackwindow]
 autostart=false
 strip_enabled=true
 strip_width=14
@@ -39,10 +41,9 @@ fallback_height=44
 peek_enabled=true
 peek_delay_ms=500
 peek_opacity=0.080
-shake_enabled=true
+shake_enabled=false
 tray_enabled=false
 language=en
-first_run_done=true
 """
 
 
@@ -80,16 +81,30 @@ def png_size(path: pathlib.Path) -> tuple[int, int]:
     return int(width), int(height)
 
 
-def wrap_svg(png: pathlib.Path, out: pathlib.Path) -> None:
-    width, height = png_size(png)
+def framed_svg(png: pathlib.Path, out: pathlib.Path, title: str) -> None:
+    content_w, content_h = png_size(png)
+    width = content_w
+    height = content_h + FRAME_H
     data = base64.b64encode(png.read_bytes()).decode("ascii")
-    out.write_text(
+    svg = (
         '<svg xmlns="http://www.w3.org/2000/svg" '
         f'width="{width}" height="{height}" viewBox="0 0 {width} {height}">'
-        f'<image width="{width}" height="{height}" '
-        f'href="data:image/png;base64,{data}"/></svg>\n',
-        encoding="utf-8",
+        f'<defs><clipPath id="win"><rect x="0" y="0" width="{width}" '
+        f'height="{height}" rx="{RADIUS}"/></clipPath></defs>'
+        '<g clip-path="url(#win)">'
+        f'<rect width="{width}" height="{height}" fill="#1e1e1e"/>'
+        f'<image x="0" y="{FRAME_H}" width="{content_w}" height="{content_h}" '
+        f'href="data:image/png;base64,{data}"/>'
+        f'<rect width="{width}" height="{FRAME_H}" fill="#2b2b2b"/>'
+        '<circle cx="18" cy="18" r="6" fill="#ff5f57"/>'
+        '<circle cx="38" cy="18" r="6" fill="#febc2e"/>'
+        '<circle cx="58" cy="18" r="6" fill="#28c840"/>'
+        f'<text x="{width / 2}" y="23" text-anchor="middle" '
+        'font-family="DejaVu Sans, Arial, sans-serif" font-size="13" '
+        f'fill="#e6e6e6">{title}</text>'
+        '</g></svg>\n'
     )
+    out.write_text(svg, encoding="utf-8")
     print(f"wrote {out.relative_to(ROOT)}")
 
 
@@ -99,20 +114,10 @@ def capture_root(dest: pathlib.Path) -> None:
         die("screen capture failed (ImageMagick import + Xvfb required)")
 
 
-def main() -> int:
-    if not APP.exists():
-        die(f"build the app first: {APP} is missing (run ./comebackwindow once)")
-    xvfb = xvfb_binary()
-    if xvfb is None:
-        die("Xvfb not found (install xorg-x11-server-Xvfb)")
-
-    # English UI needs the compiled catalogs next to the sources.
-    if run(["make", "-s", "mo"], cwd=ROOT).returncode != 0:
-        die("make mo failed (gettext/msgfmt required)")
-
-    config_dir = TMP / "config"
+def capture_window(config_text: str, args: list[str], name: str) -> pathlib.Path:
+    config_dir = TMP / f"cfg-{name}"
     config_dir.mkdir()
-    (config_dir / "config.ini").write_text(CONFIG, encoding="utf-8")
+    (config_dir / "config.ini").write_text(config_text, encoding="utf-8")
 
     env = os.environ.copy()
     env.pop("WAYLAND_DISPLAY", None)
@@ -122,41 +127,52 @@ def main() -> int:
     env["CBW_CONFIG_DIR"] = str(config_dir)
     env["CBW_DATA_DIR"] = str(ROOT)
 
+    app = subprocess.Popen([str(APP), *args], env=env,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+    try:
+        time.sleep(4.0)
+        full = TMP / f"{name}-full.png"
+        capture_root(full)
+        shot = TMP / f"{name}.png"
+        magick(str(full), "-crop", f"{SHOT_W}x{SHOT_H}+0+0", "+repage",
+               str(shot))
+    finally:
+        app.terminate()
+        try:
+            app.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            app.kill()
+    return shot
+
+
+def main() -> int:
+    if not APP.exists():
+        die(f"build the app first: {APP} is missing (run ./comebackwindow once)")
+    xvfb = xvfb_binary()
+    if xvfb is None:
+        die("Xvfb not found (install xorg-x11-server-Xvfb)")
+    if run(["pgrep", "-x", "comebackwindow"], stdout=subprocess.DEVNULL).returncode == 0:
+        die("close the running comebackwindow instance first (pkill -x comebackwindow)")
+    if run(["make", "-s", "mo"], cwd=ROOT).returncode != 0:
+        die("make mo failed (gettext/msgfmt required)")
+
     server = subprocess.Popen(
-        [xvfb, DISPLAY, "-screen", "0", SCREEN, "-wr"],
+        [xvfb, DISPLAY, "-screen", "0", SCREEN],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
-    app = None
     try:
         time.sleep(1.5)
-        app = subprocess.Popen([str(APP)], env=env, stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL)
-        time.sleep(3.0)
-
-        # Ask the running instance to present the real settings window.
-        run([str(APP), "--settings"], env=env, stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL)
-        time.sleep(2.0)
-
-        full = TMP / "full.png"
-        capture_root(full)
-        # The settings window is mapped at 0,0 on the bare Xvfb screen.
-        magick(str(full), "-crop", "560x880+0+0", "+repage",
-               str(TMP / "settings.png"))
-        # Strip sits in the bottom-right corner of the virtual screen.
-        magick(str(full), "-gravity", "SouthEast", "-crop", "260x170+0+0",
-               "+repage", str(TMP / "strip.png"))
-
+        settings = capture_window(BASE_CONFIG + "first_run_done=true\n",
+                                  ["--settings"], "settings")
+        setup = capture_window(BASE_CONFIG + "first_run_done=false\n",
+                               [], "setup")
         OUT.mkdir(parents=True, exist_ok=True)
-        wrap_svg(TMP / "strip.png", OUT / "app-strip.svg")
-        wrap_svg(TMP / "settings.png", OUT / "app-settings.svg")
+        framed_svg(settings, OUT / "app-settings.svg",
+                   "Come Back Window — Settings")
+        framed_svg(setup, OUT / "app-setup.svg",
+                   "Come Back Window — Setup")
     finally:
-        if app is not None:
-            app.terminate()
-            try:
-                app.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                app.kill()
         server.send_signal(signal.SIGTERM)
         try:
             server.wait(timeout=5)

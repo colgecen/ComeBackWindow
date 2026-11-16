@@ -10,11 +10,11 @@
 ## Screenshots
 
 <p align="center">
-  <img src="docs/img/app-strip.svg" alt="Come Back Window Show Desktop strip" width="260">
+  <img src="docs/img/app-settings.svg" alt="Come Back Window settings" width="400">
 </p>
 
 <p align="center">
-  <img src="docs/img/app-settings.svg" alt="Come Back Window settings" width="800">
+  <img src="docs/img/app-setup.svg" alt="Come Back Window setup wizard" width="400">
 </p>
 
 ### Regenerating the screenshots
@@ -32,11 +32,11 @@ produce readable diffs.
 
 #### How it works
 
-The script starts a throwaway instance with a demo configuration (English UI,
-text strip) on a private Xvfb display, opens the real settings window, and
-captures the actual windows with ImageMagick. The PNG bytes are then embedded
-in a lightweight SVG wrapper. Requirements: `Xvfb` and ImageMagick; the user's
-desktop is never captured.
+The script starts throwaway instances with a demo configuration (English UI)
+on a private Xvfb display, opens the real settings window and the first-run
+wizard, and captures them with ImageMagick. Each capture is wrapped in an SVG
+with a macOS-style title bar as window decoration. Requirements: `Xvfb` and
+ImageMagick; the user's desktop is never captured.
 
 ## Features
 
