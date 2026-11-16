@@ -9,7 +9,7 @@
 set -u
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-APP="$ROOT/comebackwindow"
+APP="$ROOT/build/comebackwindow"
 TESTWIN="$ROOT/tests/helpers/testwin"
 TMP=$(mktemp -d "${TMPDIR:-/tmp}/cbw-integration-XXXXXX")
 APP_PID=""

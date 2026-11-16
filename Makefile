@@ -58,7 +58,7 @@ XDG_SRC := protocols/xdg-shell-protocol.c
 
 SRC := $(wildcard src/*.c)
 OBJ := $(patsubst src/%.c,$(OBJDIR)/%.o,$(SRC))
-BIN := comebackwindow
+BIN := $(BUILD)/comebackwindow
 
 ICON_SIZES := 16 22 24 32 48 64 128 256
 ICON_PNGS := $(foreach s,$(ICON_SIZES),assets/comebackwindow-$(s).png)
@@ -105,6 +105,7 @@ $(PROTO_OBJ): $(OBJDIR)/%.o: protocols/%.c $(LAYER_HDR) $(XDG_HDR)
 
 $(OBJDIR)/strip_wayland.o: $(LAYER_HDR)
 $(BIN): $(OBJ) $(PROTO_OBJ)
+	@mkdir -p $(BUILD)
 	$(CC) $(CFLAGS_LOCAL) $(OBJ) $(PROTO_OBJ) -o $@ $(PKG_LIBS) $(LDLIBS_LOCAL)
 
 deps-check:
@@ -241,7 +242,7 @@ check: lint test-unit test-js test-validate
 	@echo "make check: TÜMÜ YEŞİL"
 
 install: all icons mo
-	install -Dm755 $(BIN) $(BINDIR)/$(BIN)
+	install -Dm755 $(BIN) $(BINDIR)/comebackwindow
 	install -d $(DATADIR)/comebackwindow/kwin
 	cp -r kwin/metadata.json kwin/contents $(DATADIR)/comebackwindow/kwin/
 	install -d $(DATADIR)/comebackwindow/kwin/contents/code
